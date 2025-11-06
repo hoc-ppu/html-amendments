@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th{
+      /* background: white; */
+      position: sticky;
+      top: 0; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the bills API and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>English Devolution and Community Empowerment Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">English Devolution and Community Empowerment Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>English Devolution and Community Empowerment Bill</td></tr><tr><td>Published date</td><td>Thursday 06 November 2025</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they are almost certainly also missing from bills.parliament. </p><p>Missing content: <strong>24</strong><br>99 (hoc414), NC32 (hoc418), NC33 (hoc419), 91 (hoc406), 89 (hoc404), 87 (hoc402), 88 (hoc405), 94 (hoc409), 95 (hoc410), NC29 (hoc397), 8 (hoc296), 96 (hoc413), 103 (hoc421), NC31 (hoc401), 101 (hoc415), 97 (hoc411), 98 (hoc412), NC34 (hoc420), 93 (hoc408), 90 (hoc403), 102 (hoc417), 100 (hoc416), NC30 (hoc400), 92 (hoc407)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <table class="sticky-head table-responsive-md table an-table"><thead><tr><th scope="col">Ref</th><th scope="col">Names missing from API</th><th scope="col">Names in API but not in XML</th><th scope="col">Totals</th></tr></thead><tbody><tr><td>NC10 (hoc242)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Mr Lee Dillon</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Vikki Slade</span><span class="col-12 col-lg-6  mb-2">Tim Farron</span></p></td><td></td><td>XML only: 4</td></tr><tr><td>NC13 (hoc316)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Rachael Maskell</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>NC14 (hoc362)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>NC15 (hoc363)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>NC17 (hoc365)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Daisy Cooper</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span><span class="col-12 col-lg-6  mb-2">Cameron Thomas</span><span class="col-12 col-lg-6  mb-2">Neil Duncan-Jordan</span></p></td><td></td><td>XML only: 4</td></tr><tr><td>NC20 (hoc368)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>NC24 (hoc372)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>NC25 (hoc376)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span><span class="col-12 col-lg-6  mb-2">Martin Wrigley</span></p></td><td></td><td>XML only: 2</td></tr><tr><td>NC26 (hoc377)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>53 (hoc333)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>85 (hoc383)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>77 (hoc357)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>79 (hoc359)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>27 (hoc308)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>73 (hoc356)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>72 (hoc355)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>41 (hoc322)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>43 (hoc324)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>44 (hoc325)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>78 (hoc358)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>54 (hoc334)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>50 (hoc374)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>55 (hoc335)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>56 (hoc336)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>52 (hoc332)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>86 (hoc384)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>35 (hoc301)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>81 (hoc375)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>2 (hoc280)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Edward Morello</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>38 (hoc373)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>57 (hoc337)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>58 (hoc338)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>59 (hoc339)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>60 (hoc340)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>82 (hoc378)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>64 (hoc344)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>34 (hoc305)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr><tr><td>63 (hoc343)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Vikki Slade</span></p></td><td></td><td>XML only: 1</td></tr></tbody></table><section class="collapsible closed"><div class="collapsible-header"><h3 class="h4"><span class="arrow"> </span>Name Changes in Context <small class="text-muted"> [show]</small></h3><p>Expand this section to see the same names as above but in context.</p></div><div class="collapsible-content" style="display: none;" id="name-changes-in-context"><p><strong>38</strong> amendments have different names in the API: </p>
+<div><p class="h5 mt-4">NC10:</p>
+
+    <table class="diff" id="difflib_chg_to0__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__0"></td><td class="diff_header" id="from0_5">5</td><td>David Chadwick</td><td class="diff_next"></td><td class="diff_header" id="to0_5">5</td><td>David Chadwick</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_6">6</td><td>Steve Darling</td><td class="diff_next"></td><td class="diff_header" id="to0_6">6</td><td>Steve Darling</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_7">7</td><td>Wera Hobhouse</td><td class="diff_next"></td><td class="diff_header" id="to0_7">7</td><td>Wera Hobhouse</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="from0_8">8</td><td><span class="diff_sub">Mr Lee Dillon</span></td><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_9">9</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_10">10</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_11">11</td><td><span class="diff_sub">Tim Farron</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC13:</p>
+
+    <table class="diff" id="difflib_chg_to1__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to1__0"></td><td class="diff_header" id="from1_3">3</td><td>Kim Johnson</td><td class="diff_next"></td><td class="diff_header" id="to1_3">3</td><td>Kim Johnson</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_4">4</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to1_4">4</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_5">5</td><td>Clive Lewis</td><td class="diff_next"></td><td class="diff_header" id="to1_5">5</td><td>Clive Lewis</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="from1_6">6</td><td><span class="diff_sub">Rachael Maskell</span></td><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC14:</p>
+
+    <table class="diff" id="difflib_chg_to2__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__0"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="from2_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="to2_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="from2_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC15:</p>
+
+    <table class="diff" id="difflib_chg_to3__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to3__0"><a href="#difflib_chg_to3__0">f</a></td><td class="diff_header" id="from3_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to3__0">f</a></td><td class="diff_header" id="to3_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="from3_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC17:</p>
+
+    <table class="diff" id="difflib_chg_to4__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to4__0"><a href="#difflib_chg_to4__0">f</a></td><td class="diff_header" id="from4_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to4__0">f</a></td><td class="diff_header" id="to4_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="from4_2">2</td><td><span class="diff_sub">Daisy Cooper</span></td><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_3">3</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_4">4</td><td><span class="diff_sub">Cameron Thomas</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_5">5</td><td><span class="diff_sub">Neil Duncan-Jordan</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC20:</p>
+
+    <table class="diff" id="difflib_chg_to5__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to5__0"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="from5_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="to5_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="from5_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC24:</p>
+
+    <table class="diff" id="difflib_chg_to6__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to6__0"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="from6_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="to6_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="from6_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC25:</p>
+
+    <table class="diff" id="difflib_chg_to7__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to7__0"><a href="#difflib_chg_to7__0">f</a></td><td class="diff_header" id="from7_1">1</td><td>Mr Lee Dillon</td><td class="diff_next"><a href="#difflib_chg_to7__0">f</a></td><td class="diff_header" id="to7_1">1</td><td>Mr Lee Dillon</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="from7_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_3">3</td><td><span class="diff_sub">Martin Wrigley</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC26:</p>
+
+    <table class="diff" id="difflib_chg_to8__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to8__0"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="from8_1">1</td><td>Munira Wilson</td><td class="diff_next"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="to8_1">1</td><td>Munira Wilson</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="from8_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">53:</p>
+
+    <table class="diff" id="difflib_chg_to9__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to9__0"><a href="#difflib_chg_to9__0">f</a></td><td class="diff_header" id="from9_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to9__0">f</a></td><td class="diff_header" id="to9_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="from9_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">85:</p>
+
+    <table class="diff" id="difflib_chg_to10__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to10__0"><a href="#difflib_chg_to10__0">f</a></td><td class="diff_header" id="from10_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to10__0">f</a></td><td class="diff_header" id="to10_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="from10_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">77:</p>
+
+    <table class="diff" id="difflib_chg_to11__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to11__0"><a href="#difflib_chg_to11__0">f</a></td><td class="diff_header" id="from11_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to11__0">f</a></td><td class="diff_header" id="to11_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="from11_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">79:</p>
+
+    <table class="diff" id="difflib_chg_to12__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to12__0"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="from12_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="to12_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="from12_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">27:</p>
+
+    <table class="diff" id="difflib_chg_to15__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to15__0"><a href="#difflib_chg_to15__0">f</a></td><td class="diff_header" id="from15_1">1</td><td>Manuela Perteghella</td><td class="diff_next"><a href="#difflib_chg_to15__0">f</a></td><td class="diff_header" id="to15_1">1</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_2">2</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to15_2">2</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_3">3</td><td>Zöe Franklin</td><td class="diff_next"></td><td class="diff_header" id="to15_3">3</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header" id="from15_4">4</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">73:</p>
+
+    <table class="diff" id="difflib_chg_to17__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to17__0"><a href="#difflib_chg_to17__0">f</a></td><td class="diff_header" id="from17_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to17__0">f</a></td><td class="diff_header" id="to17_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header" id="from17_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">72:</p>
+
+    <table class="diff" id="difflib_chg_to20__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to20__0"><a href="#difflib_chg_to20__0">f</a></td><td class="diff_header" id="from20_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to20__0">f</a></td><td class="diff_header" id="to20_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header" id="from20_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">41:</p>
+
+    <table class="diff" id="difflib_chg_to31__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to31__0"><a href="#difflib_chg_to31__0">f</a></td><td class="diff_header" id="from31_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to31__0">f</a></td><td class="diff_header" id="to31_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header" id="from31_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">43:</p>
+
+    <table class="diff" id="difflib_chg_to33__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to33__0"><a href="#difflib_chg_to33__0">f</a></td><td class="diff_header" id="from33_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to33__0">f</a></td><td class="diff_header" id="to33_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header" id="from33_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">44:</p>
+
+    <table class="diff" id="difflib_chg_to36__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to36__0"><a href="#difflib_chg_to36__0">f</a></td><td class="diff_header" id="from36_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to36__0">f</a></td><td class="diff_header" id="to36_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to36__top">t</a></td><td class="diff_header" id="from36_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to36__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">78:</p>
+
+    <table class="diff" id="difflib_chg_to40__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to40__0"><a href="#difflib_chg_to40__0">f</a></td><td class="diff_header" id="from40_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to40__0">f</a></td><td class="diff_header" id="to40_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to40__top">t</a></td><td class="diff_header" id="from40_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to40__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">54:</p>
+
+    <table class="diff" id="difflib_chg_to48__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to48__0"><a href="#difflib_chg_to48__0">f</a></td><td class="diff_header" id="from48_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to48__0">f</a></td><td class="diff_header" id="to48_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to48__top">t</a></td><td class="diff_header" id="from48_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to48__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">50:</p>
+
+    <table class="diff" id="difflib_chg_to52__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to52__0"><a href="#difflib_chg_to52__0">f</a></td><td class="diff_header" id="from52_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to52__0">f</a></td><td class="diff_header" id="to52_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to52__top">t</a></td><td class="diff_header" id="from52_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to52__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">55:</p>
+
+    <table class="diff" id="difflib_chg_to54__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to54__0"><a href="#difflib_chg_to54__0">f</a></td><td class="diff_header" id="from54_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to54__0">f</a></td><td class="diff_header" id="to54_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to54__top">t</a></td><td class="diff_header" id="from54_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to54__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">56:</p>
+
+    <table class="diff" id="difflib_chg_to56__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to56__0"><a href="#difflib_chg_to56__0">f</a></td><td class="diff_header" id="from56_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to56__0">f</a></td><td class="diff_header" id="to56_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to56__top">t</a></td><td class="diff_header" id="from56_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to56__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">52:</p>
+
+    <table class="diff" id="difflib_chg_to64__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to64__0"><a href="#difflib_chg_to64__0">f</a></td><td class="diff_header" id="from64_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to64__0">f</a></td><td class="diff_header" id="to64_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to64__top">t</a></td><td class="diff_header" id="from64_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to64__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">86:</p>
+
+    <table class="diff" id="difflib_chg_to69__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to69__0"><a href="#difflib_chg_to69__0">f</a></td><td class="diff_header" id="from69_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to69__0">f</a></td><td class="diff_header" id="to69_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to69__top">t</a></td><td class="diff_header" id="from69_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to69__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">35:</p>
+
+    <table class="diff" id="difflib_chg_to73__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to73__0"><a href="#difflib_chg_to73__0">f</a></td><td class="diff_header" id="from73_1">1</td><td>Marie Goldman</td><td class="diff_next"><a href="#difflib_chg_to73__0">f</a></td><td class="diff_header" id="to73_1">1</td><td>Marie Goldman</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to73__top">t</a></td><td class="diff_header" id="from73_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to73__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">81:</p>
+
+    <table class="diff" id="difflib_chg_to86__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to86__0"><a href="#difflib_chg_to86__0">f</a></td><td class="diff_header" id="from86_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to86__0">f</a></td><td class="diff_header" id="to86_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to86__top">t</a></td><td class="diff_header" id="from86_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to86__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">2:</p>
+
+    <table class="diff" id="difflib_chg_to90__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to90__0"><a href="#difflib_chg_to90__0">f</a></td><td class="diff_header" id="from90_1">1</td><td>David Simmonds</td><td class="diff_next"><a href="#difflib_chg_to90__0">f</a></td><td class="diff_header" id="to90_1">1</td><td>David Simmonds</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from90_2">2</td><td>Paul Holmes</td><td class="diff_next"></td><td class="diff_header" id="to90_2">2</td><td>Paul Holmes</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to90__top">t</a></td><td class="diff_header" id="from90_3">3</td><td><span class="diff_sub">Edward Morello</span></td><td class="diff_next"><a href="#difflib_chg_to90__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">38:</p>
+
+    <table class="diff" id="difflib_chg_to92__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to92__0"><a href="#difflib_chg_to92__0">f</a></td><td class="diff_header" id="from92_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to92__0">f</a></td><td class="diff_header" id="to92_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to92__top">t</a></td><td class="diff_header" id="from92_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to92__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">57:</p>
+
+    <table class="diff" id="difflib_chg_to101__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to101__0"><a href="#difflib_chg_to101__0">f</a></td><td class="diff_header" id="from101_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to101__0">f</a></td><td class="diff_header" id="to101_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to101__top">t</a></td><td class="diff_header" id="from101_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to101__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">58:</p>
+
+    <table class="diff" id="difflib_chg_to103__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to103__0"><a href="#difflib_chg_to103__0">f</a></td><td class="diff_header" id="from103_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to103__0">f</a></td><td class="diff_header" id="to103_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to103__top">t</a></td><td class="diff_header" id="from103_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to103__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">59:</p>
+
+    <table class="diff" id="difflib_chg_to105__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to105__0"><a href="#difflib_chg_to105__0">f</a></td><td class="diff_header" id="from105_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to105__0">f</a></td><td class="diff_header" id="to105_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to105__top">t</a></td><td class="diff_header" id="from105_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to105__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">60:</p>
+
+    <table class="diff" id="difflib_chg_to107__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to107__0"><a href="#difflib_chg_to107__0">f</a></td><td class="diff_header" id="from107_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to107__0">f</a></td><td class="diff_header" id="to107_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to107__top">t</a></td><td class="diff_header" id="from107_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to107__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">82:</p>
+
+    <table class="diff" id="difflib_chg_to109__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to109__0"><a href="#difflib_chg_to109__0">f</a></td><td class="diff_header" id="from109_1">1</td><td>Munira Wilson</td><td class="diff_next"><a href="#difflib_chg_to109__0">f</a></td><td class="diff_header" id="to109_1">1</td><td>Munira Wilson</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to109__top">t</a></td><td class="diff_header" id="from109_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to109__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">64:</p>
+
+    <table class="diff" id="difflib_chg_to111__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to111__0"><a href="#difflib_chg_to111__0">f</a></td><td class="diff_header" id="from111_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to111__0">f</a></td><td class="diff_header" id="to111_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to111__top">t</a></td><td class="diff_header" id="from111_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to111__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">34:</p>
+
+    <table class="diff" id="difflib_chg_to113__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to113__0"><a href="#difflib_chg_to113__0">f</a></td><td class="diff_header" id="from113_1">1</td><td>Alison Bennett</td><td class="diff_next"><a href="#difflib_chg_to113__0">f</a></td><td class="diff_header" id="to113_1">1</td><td>Alison Bennett</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to113__top">t</a></td><td class="diff_header" id="from113_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to113__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">63:</p>
+
+    <table class="diff" id="difflib_chg_to115__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to115__0"><a href="#difflib_chg_to115__0">f</a></td><td class="diff_header" id="from115_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to115__0">f</a></td><td class="diff_header" id="to115_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to115__top">t</a></td><td class="diff_header" id="from115_2">2</td><td><span class="diff_sub">Vikki Slade</span></td><td class="diff_next"><a href="#difflib_chg_to115__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div></div></section></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>75</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC1 (hoc290), NC2 (hoc291), NC3 (hoc292), NC4 (hoc293), NC5 (hoc306), NC6 (hoc307), NC7 (hoc299), NC8 (hoc300), NC9 (hoc298), NC11 (hoc304), NC12 (hoc317), NC16 (hoc364), NC18 (hoc366), NC19 (hoc367), NC21 (hoc370), NC22 (hoc371), NC23 (hoc369), NC27 (hoc379), NC28 (hoc380), 37 (hoc319), 61 (hoc341), 39 (hoc320), 75 (hoc352), 76 (hoc353), 47 (hoc328), 48 (hoc329), 40 (hoc321), 36 (hoc318), 1 (hoc279), 3 (hoc281), 42 (hoc323), 70 (hoc350), 5 (hoc283), 46 (hoc327), 45 (hoc326), 7 (hoc288), 9 (hoc265), 10 (hoc266), 11 (hoc267), 12 (hoc268), 13 (hoc269), 62 (hoc342), 14 (hoc270), 51 (hoc331), 15 (hoc271), 16 (hoc272), 17 (hoc273), 18 (hoc274), 19 (hoc275), 20 (hoc276), 21 (hoc277), 22 (hoc278), 24 (hoc286), 23 (hoc287), 74 (hoc351), 67 (hoc347), 25 (hoc289), 71 (hoc354), 68 (hoc348), 26 (hoc285), 69 (hoc349), 65 (hoc346), 80 (hoc360), 83 (hoc381), 66 (hoc361), 84 (hoc382), 49 (hoc330), 4 (hoc282), 28 (hoc313), 29 (hoc312), 6 (hoc284), 30 (hoc311), 32 (hoc309), 31 (hoc310), 33 (hoc314)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">113 amendments have incorrect stars:</strong>  NC1 has ☆ (No Star expected), NC2 has ☆ (No Star expected), NC3 has ☆ (No Star expected), NC4 has ☆ (No Star expected), NC5 has ☆ (No Star expected), NC6 has ☆ (No Star expected), NC7 has ☆ (No Star expected), NC8 has ☆ (No Star expected), NC9 has ☆ (No Star expected), NC10 has ☆ (No Star expected), NC11 has ☆ (No Star expected), NC12 has ☆ (No Star expected), NC13 has ☆ (No Star expected), NC14 has ☆ (No Star expected), NC15 has ☆ (No Star expected), NC16 has ☆ (No Star expected), NC17 has ☆ (No Star expected), NC18 has ☆ (No Star expected), NC19 has ☆ (No Star expected), NC20 has ☆ (No Star expected), NC21 has ☆ (No Star expected), NC22 has ☆ (No Star expected), NC23 has ☆ (No Star expected), NC24 has ☆ (No Star expected), NC25 has ★ (No Star expected), NC26 has ★ (No Star expected), NC27 has ★ (No Star expected), NC28 has ★ (No Star expected), 37 has ☆ (No Star expected), 53 has ☆ (No Star expected), 61 has ☆ (No Star expected), 85 has ★ (No Star expected), 77 has ☆ (No Star expected), 79 has ☆ (No Star expected), 39 has ☆ (No Star expected), 27 has ☆ (No Star expected), 73 has ☆ (No Star expected), 75 has ☆ (No Star expected), 72 has ☆ (No Star expected), 76 has ☆ (No Star expected), 47 has ☆ (No Star expected), 48 has ☆ (No Star expected), 40 has ☆ (No Star expected), 36 has ☆ (No Star expected), 1 has ☆ (No Star expected), 3 has ☆ (No Star expected), 42 has ☆ (No Star expected), 70 has ☆ (No Star expected), 41 has ☆ (No Star expected), 43 has ☆ (No Star expected), 5 has ☆ (No Star expected), 44 has ☆ (No Star expected), 46 has ☆ (No Star expected), 45 has ☆ (No Star expected), 78 has ☆ (No Star expected), 7 has ☆ (No Star expected), 9 has ☆ (No Star expected), 10 has ☆ (No Star expected), 11 has ☆ (No Star expected), 12 has ☆ (No Star expected), 13 has ☆ (No Star expected), 54 has ☆ (No Star expected), 62 has ☆ (No Star expected), 14 has ☆ (No Star expected), 50 has ☆ (No Star expected), 55 has ☆ (No Star expected), 56 has ☆ (No Star expected), 51 has ☆ (No Star expected), 15 has ☆ (No Star expected), 16 has ☆ (No Star expected), 17 has ☆ (No Star expected), 18 has ☆ (No Star expected), 19 has ☆ (No Star expected), 52 has ☆ (No Star expected), 20 has ☆ (No Star expected), 21 has ☆ (No Star expected), 22 has ☆ (No Star expected), 86 has ★ (No Star expected), 24 has ☆ (No Star expected), 23 has ☆ (No Star expected), 35 has ☆ (No Star expected), 74 has ☆ (No Star expected), 67 has ☆ (No Star expected), 25 has ☆ (No Star expected), 71 has ☆ (No Star expected), 68 has ☆ (No Star expected), 26 has ☆ (No Star expected), 69 has ☆ (No Star expected), 65 has ☆ (No Star expected), 80 has ☆ (No Star expected), 83 has ★ (No Star expected), 66 has ☆ (No Star expected), 81 has ☆ (No Star expected), 84 has ★ (No Star expected), 49 has ☆ (No Star expected), 2 has ☆ (No Star expected), 38 has ☆ (No Star expected), 4 has ☆ (No Star expected), 28 has ☆ (No Star expected), 29 has ☆ (No Star expected), 6 has ☆ (No Star expected), 30 has ☆ (No Star expected), 32 has ☆ (No Star expected), 31 has ☆ (No Star expected), 57 has ☆ (No Star expected), 58 has ☆ (No Star expected), 59 has ☆ (No Star expected), 60 has ☆ (No Star expected), 82 has ★ (No Star expected), 64 has ☆ (No Star expected), 34 has ☆ (No Star expected), 63 has ☆ (No Star expected), 33 has ☆ (No Star expected)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Changed amendments" id="card-4"><span class="arrow"> </span>Changed amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">80</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028356" target="_blank">79</a>:</p>
+
+    <table class="diff" id="difflib_chg_to13__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to13__0"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="from13_1">1</td><td>Clause 19, page 22, line 32, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="to13_1">1</td><td>Clause 19, page 22, line 32, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="from13_2">2</td><td>“(f) progress with the implementation of the strategy provided for in section [Duty to publish and implement a <span class="diff_chg">f</span>orward <span class="diff_chg">d</span>evolution <span class="diff_chg">s</span>trategy].”</td><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="to13_2">2</td><td>“(f) progress with the implementation of the strategy provided for in section [Duty to publish and implement a <span class="diff_chg">F</span>orward <span class="diff_chg">D</span>evolution <span class="diff_chg">S</span>trategy].”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028418" target="_blank">39</a>:</p>
+
+    <table class="diff" id="difflib_chg_to14__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to14__0"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="from14_1">1</td><td>Clause 21, page <span class="diff_sub">4</span>2, line <span class="diff_chg">4</span>, leave out subsection (b) and insert—</td><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="to14_1">1</td><td>Clause 21, page 2<span class="diff_add">3</span>, line <span class="diff_chg">28</span>, leave out subsection (b) and insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_2">2</td><td>“(b) one or more of the following—</td><td class="diff_next"></td><td class="diff_header" id="to14_2">2</td><td>“(b) one or more of the following—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_3">3</td><td>(i) health and social care;</td><td class="diff_next"></td><td class="diff_header" id="to14_3">3</td><td>(i) health and social care;</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_4">4</td><td>(ii) planning;</td><td class="diff_next"></td><td class="diff_header" id="to14_4">4</td><td>(ii) planning;</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028372" target="_blank">27</a>:</p>
+
+    <table class="diff" id="difflib_chg_to16__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to16__0"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="from16_1">1</td><td>Clause 40, page 4<span class="diff_chg">1</span>, line 1<span class="diff_sub">1 </span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="to16_1">1</td><td>Clause 40, page 4<span class="diff_chg">0</span>, line <span class="diff_add">3</span>1, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_2">2</td><td>“(2A) In section 144, after subsection (1) insert—</td><td class="diff_next"></td><td class="diff_header" id="to16_2">2</td><td>“(2A) In section 144, after subsection (1) insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_3">3</td><td>“(1A) In exercising powers under subsection (1) the relevant authority must engage with town and parish council within its area.</td><td class="diff_next"></td><td class="diff_header" id="to16_3">3</td><td>“(1A) In exercising powers under subsection (1) the relevant authority must engage with town and parish council within its area.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_4">4</td><td>(1B) Engagement under subsection (1A) must include—</td><td class="diff_next"></td><td class="diff_header" id="to16_4">4</td><td>(1B) Engagement under subsection (1A) must include—</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028353" target="_blank">73</a>:</p>
+
+    <table class="diff" id="difflib_chg_to18__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to18__0"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header" id="from18_1">1</td><td>Clause 43, page 4<span class="diff_chg">3</span>, line <span class="diff_chg">36</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header" id="to18_1">1</td><td>Clause 43, page 4<span class="diff_chg">5</span>, line <span class="diff_chg">25</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_2">2</td><td>“(e) nitrogen dioxide level and general air quality,”</td><td class="diff_next"></td><td class="diff_header" id="to18_2">2</td><td>“(e) nitrogen dioxide level and general air quality,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028347" target="_blank">75</a>:</p>
+
+    <table class="diff" id="difflib_chg_to19__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to19__0"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="from19_1">1</td><td>Clause 43, page 44, line <span class="diff_sub">2</span>1, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="to19_1">1</td><td>Clause 43, page 44, line 1<span class="diff_add">4</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_2">2</td><td>“(2A) The Secretary of State has a duty to ensure that a combined authority has sufficient financial resources and adequate administrative support the duties in subsections (1) and (2).</td><td class="diff_next"></td><td class="diff_header" id="to19_2">2</td><td>“(2A) The Secretary of State has a duty to ensure that a combined authority has sufficient financial resources and adequate administrative support the duties in subsections (1) and (2).</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_3">3</td><td>(2B) In discharging the duty under subsection (2A), the Secretary of State must regularly review the financial and administrative needs of a combined authority insofar as they relate to the needs described in subsection (1).”</td><td class="diff_next"></td><td class="diff_header" id="to19_3">3</td><td>(2B) In discharging the duty under subsection (2A), the Secretary of State must regularly review the financial and administrative needs of a combined authority insofar as they relate to the needs described in subsection (1).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028352" target="_blank">72</a>:</p>
+
+    <table class="diff" id="difflib_chg_to21__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to21__0"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="from21_1">1</td><td>Clause 43, page 44, line <span class="diff_chg">36 </span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="to21_1">1</td><td>Clause 43, page 44, line <span class="diff_chg">29</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_2">2</td><td>“(e) nitrogen dioxide level and general air quality,”</td><td class="diff_next"></td><td class="diff_header" id="to21_2">2</td><td>“(e) nitrogen dioxide level and general air quality,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028349" target="_blank">76</a>:</p>
+
+    <table class="diff" id="difflib_chg_to22__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to22__0"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="from22_1">1</td><td>Clause 43, page 45, line <span class="diff_sub">2</span>1, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="to22_1">1</td><td>Clause 43, page 45, line 1<span class="diff_add">0</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from22_2">2</td><td>“(2A) The Secretary of State has a duty to ensure that a CCA has sufficient financial resources and adequate administrative support to have regard to the needs described in subsection (1).</td><td class="diff_next"></td><td class="diff_header" id="to22_2">2</td><td>“(2A) The Secretary of State has a duty to ensure that a CCA has sufficient financial resources and adequate administrative support to have regard to the needs described in subsection (1).</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from22_3">3</td><td>(2B) In discharging the duty under subsection (2A), the Secretary of State must regularly review the financial and administrative needs of a CCA insofar as they relate to the needs described in subsection (1).”</td><td class="diff_next"></td><td class="diff_header" id="to22_3">3</td><td>(2B) In discharging the duty under subsection (2A), the Secretary of State must regularly review the financial and administrative needs of a CCA insofar as they relate to the needs described in subsection (1).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028345" target="_blank">47</a>:</p>
+
+    <table class="diff" id="difflib_chg_to23__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to23__0"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="from23_1">1</td><td>Clause 45, page 50, line <span class="diff_chg">31</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="to23_1">1</td><td>Clause 45, page 50, line <span class="diff_chg">25</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from23_2">2</td><td>“(c) a draft of any such order is subject to the affirmative procedure.”</td><td class="diff_next"></td><td class="diff_header" id="to23_2">2</td><td>“(c) a draft of any such order is subject to the affirmative procedure.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028343" target="_blank">48</a>:</p>
+
+    <table class="diff" id="difflib_chg_to24__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to24__0"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="from24_1">1</td><td>Clause 46, page 53, line <span class="diff_chg">43</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="to24_1">1</td><td>Clause 46, page 53, line <span class="diff_chg">15</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_2">2</td><td>“(7) Regulations made under this section are subject to the affirmative procedure.”</td><td class="diff_next"></td><td class="diff_header" id="to24_2">2</td><td>“(7) Regulations made under this section are subject to the affirmative procedure.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028414" target="_blank">40</a>:</p>
+
+    <table class="diff" id="difflib_chg_to25__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to25__0"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="from25_1">1</td><td>Clause 49, page 5<span class="diff_chg">5</span>, line <span class="diff_chg">15</span>, leave out subsection (3) and insert—</td><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="to25_1">1</td><td>Clause 49, page 5<span class="diff_chg">4</span>, line <span class="diff_chg">30</span>, leave out subsection (3) and insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_2">2</td><td>“(3) Where a notification under subsection (1) is given, the Secretary of State must, within the period of six months beginning with the day on which the notification is given, give effect to the change or changes proposed by the mayor or mayors.</td><td class="diff_next"></td><td class="diff_header" id="to25_2">2</td><td>“(3) Where a notification under subsection (1) is given, the Secretary of State must, within the period of six months beginning with the day on which the notification is given, give effect to the change or changes proposed by the mayor or mayors.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_3">3</td><td>(4) Effect may be given under subsection (3) by means of regulations made by statutory instrument.</td><td class="diff_next"></td><td class="diff_header" id="to25_3">3</td><td>(4) Effect may be given under subsection (3) by means of regulations made by statutory instrument.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_4">4</td><td>(5) A statutory instrument made under subsection (4) is —</td><td class="diff_next"></td><td class="diff_header" id="to25_4">4</td><td>(5) A statutory instrument made under subsection (4) is —</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028346" target="_blank">36</a>:</p>
+
+    <table class="diff" id="difflib_chg_to26__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to26__0"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header" id="from26_1">1</td><td>Clause 49, page 5<span class="diff_chg">5</span>, line <span class="diff_chg">22</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header" id="to26_1">1</td><td>Clause 49, page 5<span class="diff_chg">4</span>, line <span class="diff_chg">36</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from26_2">2</td><td>“(4) No decision under subsection (3) may be implemented unless—</td><td class="diff_next"></td><td class="diff_header" id="to26_2">2</td><td>“(4) No decision under subsection (3) may be implemented unless—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from26_3">3</td><td>(a) the Secretary of State has made regulations giving effect to the decision,</td><td class="diff_next"></td><td class="diff_header" id="to26_3">3</td><td>(a) the Secretary of State has made regulations giving effect to the decision,</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from26_4">4</td><td>(b) a statutory instrument containing the regulations has been laid before and approved by both Houses of Parliament, and</td><td class="diff_next"></td><td class="diff_header" id="to26_4">4</td><td>(b) a statutory instrument containing the regulations has been laid before and approved by both Houses of Parliament, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028392" target="_blank">1</a>:</p>
+
+    <table class="diff" id="difflib_chg_to27__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to27__0"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header" id="from27_1">1</td><td>Page <span class="diff_chg">60</span>, line <span class="diff_chg">6</span>, leave out Clause 55</td><td class="diff_next"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header" id="to27_1">1</td><td>Page <span class="diff_chg">59</span>, line <span class="diff_chg">19</span>, leave out Clause 55</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028431" target="_blank">3</a>:</p>
+
+    <table class="diff" id="difflib_chg_to28__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to28__0"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header" id="from28_1">1</td><td>Page 60, line <span class="diff_chg">27</span>, leave out Clause 57</td><td class="diff_next"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header" id="to28_1">1</td><td>Page 60, line <span class="diff_chg">5</span>, leave out Clause 57</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028419" target="_blank">42</a>:</p>
+
+    <table class="diff" id="difflib_chg_to29__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to29__0"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header" id="from29_1">1</td><td>Clause 58, page 60, line <span class="diff_chg">34</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header" id="to29_1">1</td><td>Clause 58, page 60, line <span class="diff_chg">11</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from29_2">2</td><td>“(1A) It is a duty of a local authority to specify the description of a neighbourhood area that will apply within the local authority’s area for the purposes of subsection (1).”</td><td class="diff_next"></td><td class="diff_header" id="to29_2">2</td><td>“(1A) It is a duty of a local authority to specify the description of a neighbourhood area that will apply within the local authority’s area for the purposes of subsection (1).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028437" target="_blank">70</a>:</p>
+
+    <table class="diff" id="difflib_chg_to30__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to30__0"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header" id="from30_1">1</td><td>Clause 58, page 6<span class="diff_chg">1</span>, line <span class="diff_chg">14 </span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header" id="to30_1">1</td><td>Clause 58, page 6<span class="diff_chg">0</span>, line <span class="diff_chg">25</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_2">2</td><td>“(3A) The Secretary of State must make provision to ensure local authorities receive adequate funding to implement the “appropriate arrangements” in subsection (1) which relate to neighbourhood planning functions.”</td><td class="diff_next"></td><td class="diff_header" id="to30_2">2</td><td>“(3A) The Secretary of State must make provision to ensure local authorities receive adequate funding to implement the “appropriate arrangements” in subsection (1) which relate to neighbourhood planning functions.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028415" target="_blank">41</a>:</p>
+
+    <table class="diff" id="difflib_chg_to32__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to32__0"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="from32_1">1</td><td>Clause 58, page 6<span class="diff_chg">1</span>, line <span class="diff_chg">18</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="to32_1">1</td><td>Clause 58, page 6<span class="diff_chg">0</span>, line <span class="diff_chg">29</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from32_2">2</td><td>“(4A) But regulations may not—</td><td class="diff_next"></td><td class="diff_header" id="to32_2">2</td><td>“(4A) But regulations may not—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from32_3">3</td><td>(a) alter—</td><td class="diff_next"></td><td class="diff_header" id="to32_3">3</td><td>(a) alter—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from32_4">4</td><td>(i) any function exercised by, or</td><td class="diff_next"></td><td class="diff_header" id="to32_4">4</td><td>(i) any function exercised by, or</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028420" target="_blank">43</a>:</p>
+
+    <table class="diff" id="difflib_chg_to34__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to34__0"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header" id="from34_1">1</td><td>Clause 58, page 6<span class="diff_chg">1</span>, line <span class="diff_chg">18</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header" id="to34_1">1</td><td>Clause 58, page 6<span class="diff_chg">0</span>, line <span class="diff_chg">29</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_2">2</td><td>“(4A) Regulations under this section may not include power for the Secretary of State to specify the description of any neighbourhood area.”</td><td class="diff_next"></td><td class="diff_header" id="to34_2">2</td><td>“(4A) Regulations under this section may not include power for the Secretary of State to specify the description of any neighbourhood area.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028378" target="_blank">5</a>:</p>
+
+    <table class="diff" id="difflib_chg_to35__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to35__0"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="from35_1">1</td><td>Page 61, line 2<span class="diff_sub">7</span>, leave out Clause 59</td><td class="diff_next"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="to35_1">1</td><td>Page 61, line 2, leave out Clause 59</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028421" target="_blank">44</a>:</p>
+
+    <table class="diff" id="difflib_chg_to37__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to37__0"><a href="#difflib_chg_to37__top">t</a></td><td class="diff_header" id="from37_1">1</td><td>Clause 62, page 6<span class="diff_chg">6</span>, line 17, leave out from “acting” to end, and insert “who—</td><td class="diff_next"><a href="#difflib_chg_to37__top">t</a></td><td class="diff_header" id="to37_1">1</td><td>Clause 62, page 6<span class="diff_chg">5</span>, line 17, leave out from “acting” to end, and insert “who—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from37_2">2</td><td>“(a) are wholly independent of the Local Audit Office, and</td><td class="diff_next"></td><td class="diff_header" id="to37_2">2</td><td>“(a) are wholly independent of the Local Audit Office, and</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from37_3">3</td><td>(b) possess appropriate expertise.”</td><td class="diff_next"></td><td class="diff_header" id="to37_3">3</td><td>(b) possess appropriate expertise.”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from37_4">4</td><td>(2) The Secretary of State must approve any appointment made for the purposes of subsection (2), and may only do so when they are satisfied that the person to be appointed satisfies the criteria specified in that subsection.”</td><td class="diff_next"></td><td class="diff_header" id="to37_4">4</td><td>(2) The Secretary of State must approve any appointment made for the purposes of subsection (2), and may only do so when they are satisfied that the person to be appointed satisfies the criteria specified in that subsection.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028396" target="_blank">46</a>:</p>
+
+    <table class="diff" id="difflib_chg_to38__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to38__0"><a href="#difflib_chg_to38__top">t</a></td><td class="diff_header" id="from38_1">1</td><td>Clause 66, page 7<span class="diff_chg">1</span>,<span class="diff_sub"> line 28,</span> after line 28 insert—</td><td class="diff_next"><a href="#difflib_chg_to38__top">t</a></td><td class="diff_header" id="to38_1">1</td><td>Clause 66, page 7<span class="diff_chg">0</span>, after line 28 insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_2">2</td><td>“(4A) A Local Audit Office may make arrangements about—</td><td class="diff_next"></td><td class="diff_header" id="to38_2">2</td><td>“(4A) A Local Audit Office may make arrangements about—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_3">3</td><td>(a) the membership of an audit committee;</td><td class="diff_next"></td><td class="diff_header" id="to38_3">3</td><td>(a) the membership of an audit committee;</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_4">4</td><td>(b) the appointment of the members; and</td><td class="diff_next"></td><td class="diff_header" id="to38_4">4</td><td>(b) the appointment of the members; and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028422" target="_blank">45</a>:</p>
+
+    <table class="diff" id="difflib_chg_to39__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to39__0"><a href="#difflib_chg_to39__top">t</a></td><td class="diff_header" id="from39_1">1</td><td>Clause 66, page 7<span class="diff_chg">1</span>, leave out from beginning of line 29 to end of line 7 on page 7<span class="diff_chg">2</span></td><td class="diff_next"><a href="#difflib_chg_to39__top">t</a></td><td class="diff_header" id="to39_1">1</td><td>Clause 66, page 7<span class="diff_chg">0</span>, leave out from beginning of line 29 to end of line 7 on page 7<span class="diff_chg">1</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028355" target="_blank">78</a>:</p>
+
+    <table class="diff" id="difflib_chg_to41__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to41__0"><a href="#difflib_chg_to41__top">t</a></td><td class="diff_header" id="from41_1">1</td><td>Clause 66, page 7<span class="diff_chg">1</span>, line 31, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to41__top">t</a></td><td class="diff_header" id="to41_1">1</td><td>Clause 66, page 7<span class="diff_chg">0</span>, line 31, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from41_2">2</td><td>“(c) the training of members newly appointed to an audit committee.”</td><td class="diff_next"></td><td class="diff_header" id="to41_2">2</td><td>“(c) the training of members newly appointed to an audit committee.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028397" target="_blank">7</a>:</p>
+
+    <table class="diff" id="difflib_chg_to42__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to42__0"><a href="#difflib_chg_to42__top">t</a></td><td class="diff_header" id="from42_1">1</td><td>Page 7<span class="diff_chg">4</span>, line <span class="diff_chg">18</span>, leave out Clause 7<span class="diff_chg">2</span></td><td class="diff_next"><a href="#difflib_chg_to42__top">t</a></td><td class="diff_header" id="to42_1">1</td><td>Page 7<span class="diff_chg">2</span>, line <span class="diff_chg">20</span>, leave out Clause 7<span class="diff_chg">1</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028448" target="_blank">9</a>:</p>
+
+    <table class="diff" id="difflib_chg_to43__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to43__0"><a href="#difflib_chg_to43__top">t</a></td><td class="diff_header" id="from43_1">1</td><td>Schedule 1, page <span class="diff_chg">81</span>, line 33, leave out subparagraph (b)</td><td class="diff_next"><a href="#difflib_chg_to43__top">t</a></td><td class="diff_header" id="to43_1">1</td><td>Schedule 1, page <span class="diff_chg">79</span>, line 33, leave out subparagraph (b)</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028386" target="_blank">10</a>:</p>
+
+    <table class="diff" id="difflib_chg_to44__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to44__0"><a href="#difflib_chg_to44__top">t</a></td><td class="diff_header" id="from44_1">1</td><td>Schedule 1, page 8<span class="diff_chg">2</span>, line 18, leave out “subsections (3) to (5)” and insert “subsection (3)”</td><td class="diff_next"><a href="#difflib_chg_to44__top">t</a></td><td class="diff_header" id="to44_1">1</td><td>Schedule 1, page 8<span class="diff_chg">0</span>, line 18, leave out “subsections (3) to (5)” and insert “subsection (3)”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028384" target="_blank">11</a>:</p>
+
+    <table class="diff" id="difflib_chg_to45__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to45__0"><a href="#difflib_chg_to45__top">t</a></td><td class="diff_header" id="from45_1">1</td><td>Schedule 1, page 8<span class="diff_chg">3</span>, line <span class="diff_chg">6</span>, leave out paragraph <span class="diff_chg">8</span></td><td class="diff_next"><a href="#difflib_chg_to45__top">t</a></td><td class="diff_header" id="to45_1">1</td><td>Schedule 1, page 8<span class="diff_chg">0</span>, line <span class="diff_chg">20</span>, leave out paragraph <span class="diff_chg">6</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028385" target="_blank">12</a>:</p>
+
+    <table class="diff" id="difflib_chg_to46__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to46__0"><a href="#difflib_chg_to46__top">t</a></td><td class="diff_header" id="from46_1">1</td><td>Schedule 1, page 8<span class="diff_chg">3</span>, line <span class="diff_chg">8</span>, leave out paragraph <span class="diff_chg">9</span></td><td class="diff_next"><a href="#difflib_chg_to46__top">t</a></td><td class="diff_header" id="to46_1">1</td><td>Schedule 1, page 8<span class="diff_chg">0</span>, line <span class="diff_chg">21</span>, leave out paragraph <span class="diff_chg">7</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028382" target="_blank">13</a>:</p>
+
+    <table class="diff" id="difflib_chg_to47__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to47__0"><a href="#difflib_chg_to47__top">t</a></td><td class="diff_header" id="from47_1">1</td><td>Schedule 1, page 8<span class="diff_chg">4</span>, line <span class="diff_chg">36</span>, leave out paragraph 1<span class="diff_chg">6</span></td><td class="diff_next"><a href="#difflib_chg_to47__top">t</a></td><td class="diff_header" id="to47_1">1</td><td>Schedule 1, page 8<span class="diff_chg">2</span>, line <span class="diff_chg">11</span>, leave out paragraph 1<span class="diff_chg">4</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028363" target="_blank">54</a>:</p>
+
+    <table class="diff" id="difflib_chg_to49__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to49__0"><a href="#difflib_chg_to49__top">t</a></td><td class="diff_header" id="from49_1">1</td><td>Schedule 1, page 8<span class="diff_chg">5</span>, line <span class="diff_chg">27</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to49__top">t</a></td><td class="diff_header" id="to49_1">1</td><td>Schedule 1, page 8<span class="diff_chg">3</span>, line <span class="diff_chg">3</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from49_2">2</td><td><span class="diff_sub">“</span>(6A) The Secretary of State must consult town and parish councils within the proposed new combined authority area.”</td><td class="diff_next"></td><td class="diff_header" id="to49_2">2</td><td>(6A) The Secretary of State must consult town and parish councils within the proposed new combined authority area.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028364" target="_blank">62</a>:</p>
+
+    <table class="diff" id="difflib_chg_to50__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to50__0"><a href="#difflib_chg_to50__top">t</a></td><td class="diff_header" id="from50_1">1</td><td>Schedule 1, page 8<span class="diff_chg">6</span>, line 3<span class="diff_sub">7</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to50__top">t</a></td><td class="diff_header" id="to50_1">1</td><td>Schedule 1, page 8<span class="diff_chg">4</span>, line <span class="diff_add">1</span>3, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from50_2">2</td><td><span class="diff_sub">“</span>(<span class="diff_chg">8</span>A) The Secretary of State must make provision to ensure the combined authority receives adequate funding to facilitate its establishment.”</td><td class="diff_next"></td><td class="diff_header" id="to50_2">2</td><td>(<span class="diff_chg">9</span>A) The Secretary of State must make provision to ensure the combined authority receives adequate funding to facilitate its establishment.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028446" target="_blank">14</a>:</p>
+
+    <table class="diff" id="difflib_chg_to51__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to51__0"><a href="#difflib_chg_to51__top">t</a></td><td class="diff_header" id="from51_1">1</td><td>Schedule 1, page 8<span class="diff_chg">8</span>, line 1<span class="diff_sub">4</span>, leave out paragraph 1<span class="diff_chg">9</span></td><td class="diff_next"><a href="#difflib_chg_to51__top">t</a></td><td class="diff_header" id="to51_1">1</td><td>Schedule 1, page 8<span class="diff_chg">5</span>, line <span class="diff_add">3</span>1, leave out paragraph 1<span class="diff_chg">7</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028388" target="_blank">50</a>:</p>
+
+    <table class="diff" id="difflib_chg_to53__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to53__0"><a href="#difflib_chg_to53__top">t</a></td><td class="diff_header" id="from53_1">1</td><td>Schedule 1, page 8<span class="diff_chg">8</span>, line <span class="diff_chg">20</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to53__top">t</a></td><td class="diff_header" id="to53_1">1</td><td>Schedule 1, page 8<span class="diff_chg">5</span>, line <span class="diff_chg">37</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from53_2">2</td><td><span class="diff_sub">“</span>(<span class="diff_chg">1</span>A) The Secretary of State has obtained consent for the proposal from any affected local government area.”</td><td class="diff_next"></td><td class="diff_header" id="to53_2">2</td><td>(<span class="diff_chg">2</span>A) The Secretary of State has obtained consent for the proposal from any affected local government area.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028361" target="_blank">55</a>:</p>
+
+    <table class="diff" id="difflib_chg_to55__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to55__0"><a href="#difflib_chg_to55__top">t</a></td><td class="diff_header" id="from55_1">1</td><td>Schedule 1, page 8<span class="diff_chg">9</span>, line 2, after “to” insert “and thereafter consult with”</td><td class="diff_next"><a href="#difflib_chg_to55__top">t</a></td><td class="diff_header" id="to55_1">1</td><td>Schedule 1, page 8<span class="diff_chg">6</span>, line 2<span class="diff_add">0</span>, after “to” insert “and thereafter consult with”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028362" target="_blank">56</a>:</p>
+
+    <table class="diff" id="difflib_chg_to57__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to57__0"><a href="#difflib_chg_to57__top">t</a></td><td class="diff_header" id="from57_1">1</td><td>Schedule 1, page 8<span class="diff_chg">9</span>, line <span class="diff_chg">9</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to57__top">t</a></td><td class="diff_header" id="to57_1">1</td><td>Schedule 1, page 8<span class="diff_chg">6</span>, line <span class="diff_chg">27</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from57_2">2</td><td>“(da) any town and parish councils whose area would be added to the area of the combined authority, and”</td><td class="diff_next"></td><td class="diff_header" id="to57_2">2</td><td>“(da) any town and parish councils whose area would be added to the area of the combined authority, and”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028366" target="_blank">51</a>:</p>
+
+    <table class="diff" id="difflib_chg_to58__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to58__0"><a href="#difflib_chg_to58__top">t</a></td><td class="diff_header" id="from58_1">1</td><td><span class="diff_sub">Schedule 1, page 89, leave out from beginning of line 25 to end of line 12 on page 90</span></td><td class="diff_next"><a href="#difflib_chg_to58__top">t</a></td><td class="diff_header" id="to58_1">1</td><td><span class="diff_add">Schedule 1, page 87, leave out lines 1 to 29</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028447" target="_blank">15</a>:</p>
+
+    <table class="diff" id="difflib_chg_to59__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to59__0"><a href="#difflib_chg_to59__top">t</a></td><td class="diff_header" id="from59_1">1</td><td>Schedule 1, page <span class="diff_chg">90</span>, line <span class="diff_sub">1</span>3, leave out paragraph <span class="diff_chg">20</span></td><td class="diff_next"><a href="#difflib_chg_to59__top">t</a></td><td class="diff_header" id="to59_1">1</td><td>Schedule 1, page <span class="diff_chg">87</span>, line 3<span class="diff_add">0</span>, leave out paragraph <span class="diff_chg">18</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028430" target="_blank">16</a>:</p>
+
+    <table class="diff" id="difflib_chg_to60__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to60__0"><a href="#difflib_chg_to60__top">t</a></td><td class="diff_header" id="from60_1">1</td><td>Schedule 1, page 9<span class="diff_chg">4</span>, line <span class="diff_chg">36</span>, leave out subparagraph (b)</td><td class="diff_next"><a href="#difflib_chg_to60__top">t</a></td><td class="diff_header" id="to60_1">1</td><td>Schedule 1, page 9<span class="diff_chg">2</span>, line <span class="diff_chg">12</span>, leave out subparagraph (b)</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028393" target="_blank">17</a>:</p>
+
+    <table class="diff" id="difflib_chg_to61__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to61__0"><a href="#difflib_chg_to61__top">t</a></td><td class="diff_header" id="from61_1">1</td><td>Schedule 1, page 9<span class="diff_chg">5</span>, line <span class="diff_chg">21</span>, leave out subparagraph (b)</td><td class="diff_next"><a href="#difflib_chg_to61__top">t</a></td><td class="diff_header" id="to61_1">1</td><td>Schedule 1, page 9<span class="diff_chg">2</span>, line <span class="diff_chg">35</span>, leave out subparagraph (b)</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028445" target="_blank">18</a>:</p>
+
+    <table class="diff" id="difflib_chg_to62__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to62__0"><a href="#difflib_chg_to62__top">t</a></td><td class="diff_header" id="from62_1">1</td><td>Schedule 1, page 9<span class="diff_chg">7</span>, line <span class="diff_chg">1</span>0, leave out paragraph <span class="diff_chg">33</span></td><td class="diff_next"><a href="#difflib_chg_to62__top">t</a></td><td class="diff_header" id="to62_1">1</td><td>Schedule 1, page 9<span class="diff_chg">3</span>, line <span class="diff_chg">4</span>0, leave out paragraph <span class="diff_chg">29</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028376" target="_blank">19</a>:</p>
+
+    <table class="diff" id="difflib_chg_to63__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to63__0"><a href="#difflib_chg_to63__top">t</a></td><td class="diff_header" id="from63_1">1</td><td>Schedule 1, page 9<span class="diff_chg">7</span>, line 1<span class="diff_sub">2</span>, leave out paragraph 3<span class="diff_chg">4</span></td><td class="diff_next"><a href="#difflib_chg_to63__top">t</a></td><td class="diff_header" id="to63_1">1</td><td>Schedule 1, page 9<span class="diff_chg">4</span>, line 1, leave out paragraph 3<span class="diff_chg">0</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028404" target="_blank">52</a>:</p>
+
+    <table class="diff" id="difflib_chg_to65__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to65__0"><a href="#difflib_chg_to65__top">t</a></td><td class="diff_header" id="from65_1">1</td><td>Schedule 1, page 9<span class="diff_chg">8</span>,<span class="diff_sub"> line 22,</span> leave out paragraph<span class="diff_sub">s</span> 3<span class="diff_chg">7</span> and 3<span class="diff_chg">8</span></td><td class="diff_next"><a href="#difflib_chg_to65__top">t</a></td><td class="diff_header" id="to65_1">1</td><td>Schedule 1, page 9<span class="diff_chg">5</span>, leave out paragraph 3<span class="diff_chg">3</span> and 3<span class="diff_chg">4</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028377" target="_blank">20</a>:</p>
+
+    <table class="diff" id="difflib_chg_to66__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to66__0"><a href="#difflib_chg_to66__top">t</a></td><td class="diff_header" id="from66_1">1</td><td>Schedule 1, page 9<span class="diff_chg">8</span>, line 3<span class="diff_sub">4</span>, leave out paragraph 3<span class="diff_chg">8</span></td><td class="diff_next"><a href="#difflib_chg_to66__top">t</a></td><td class="diff_header" id="to66_1">1</td><td>Schedule 1, page 9<span class="diff_chg">5</span>, line <span class="diff_add">2</span>3, leave out paragraph 3<span class="diff_chg">4</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028391" target="_blank">21</a>:</p>
+
+    <table class="diff" id="difflib_chg_to67__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to67__0"><a href="#difflib_chg_to67__top">t</a></td><td class="diff_header" id="from67_1">1</td><td>Schedule 1, page <span class="diff_chg">102</span>, line <span class="diff_chg">16</span>, leave out paragraph <span class="diff_chg">41</span></td><td class="diff_next"><a href="#difflib_chg_to67__top">t</a></td><td class="diff_header" id="to67_1">1</td><td>Schedule 1, page <span class="diff_chg">99</span>, line <span class="diff_chg">5</span>, leave out paragraph <span class="diff_chg">37</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028411" target="_blank">22</a>:</p>
+
+    <table class="diff" id="difflib_chg_to68__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to68__0"><a href="#difflib_chg_to68__top">t</a></td><td class="diff_header" id="from68_1">1</td><td>Schedule 1, page 10<span class="diff_chg">4</span>, line 1<span class="diff_sub">3</span>, leave out paragraph <span class="diff_chg">42</span></td><td class="diff_next"><a href="#difflib_chg_to68__top">t</a></td><td class="diff_header" id="to68_1">1</td><td>Schedule 1, page 10<span class="diff_chg">1</span>, line 1, leave out paragraph <span class="diff_chg">38</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028408" target="_blank">86</a>:</p>
+
+    <table class="diff" id="difflib_chg_to70__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to70__0"><a href="#difflib_chg_to70__top">t</a></td><td class="diff_header" id="from70_1">1</td><td>Page 1<span class="diff_chg">12</span>, line 1, leave out Schedule 3</td><td class="diff_next"><a href="#difflib_chg_to70__top">t</a></td><td class="diff_header" id="to70_1">1</td><td>Page 1<span class="diff_chg">09</span>, line 1, leave out Schedule 3</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028389" target="_blank">24</a>:</p>
+
+    <table class="diff" id="difflib_chg_to71__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to71__0"><a href="#difflib_chg_to71__top">t</a></td><td class="diff_header" id="from71_1">1</td><td>Schedule 3, page 11<span class="diff_chg">7</span>, line <span class="diff_chg">25</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to71__top">t</a></td><td class="diff_header" id="to71_1">1</td><td>Schedule 3, page 11<span class="diff_chg">2</span>, line <span class="diff_chg">16</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from71_2">2</td><td><span class="diff_sub">“</span>(2A) The relevant remuneration panel may not recommend allowances which exceed the amount paid in salary to a person employed at director level within the relevant authority.”</td><td class="diff_next"></td><td class="diff_header" id="to71_2">2</td><td>(2A) The relevant remuneration panel may not recommend allowances which exceed the amount paid in salary to a person employed at director level within the relevant authority.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028398" target="_blank">23</a>:</p>
+
+    <table class="diff" id="difflib_chg_to72__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to72__0"><a href="#difflib_chg_to72__top">t</a></td><td class="diff_header" id="from72_1">1</td><td>Schedule 5, page 1<span class="diff_chg">36</span>, line 11, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to72__top">t</a></td><td class="diff_header" id="to72_1">1</td><td>Schedule 5, page 1<span class="diff_chg">28</span>, line 11, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from72_2">2</td><td>“(3) The regulations must include a requirement for the license holder to maintain sufficient docking space for the micromobility vehicles for which they hold a license.</td><td class="diff_next"></td><td class="diff_header" id="to72_2">2</td><td>“(3) The regulations must include a requirement for the license holder to maintain sufficient docking space for the micromobility vehicles for which they hold a license.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from72_3">3</td><td>(4) The regulations must include requirements for license holders which would require them to ensure that the micromobility vehicles for which they hold a license do not obstruct any highway, cycling path, footpath, bridlepath, or subway.</td><td class="diff_next"></td><td class="diff_header" id="to72_3">3</td><td>(4) The regulations must include requirements for license holders which would require them to ensure that the micromobility vehicles for which they hold a license do not obstruct any highway, cycling path, footpath, bridlepath, or subway.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from72_4">4</td><td>(5) The regulations must stipulate that failure of license holders to comply with subsections (3) and (4) will warrant a loss of license.”</td><td class="diff_next"></td><td class="diff_header" id="to72_4">4</td><td>(5) The regulations must stipulate that failure of license holders to comply with subsections (3) and (4) will warrant a loss of license.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028413" target="_blank">35</a>:</p>
+
+    <table class="diff" id="difflib_chg_to74__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to74__0"><a href="#difflib_chg_to74__top">t</a></td><td class="diff_header" id="from74_1">1</td><td>Schedule 7, page 1<span class="diff_chg">46</span>, line 22, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to74__top">t</a></td><td class="diff_header" id="to74_1">1</td><td>Schedule 7, page 1<span class="diff_chg">38</span>, line 22, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from74_2">2</td><td>“3 (1) Part 1 of Schedule 7 of the Traffic Management Act 2004 is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to74_2">2</td><td>“3 (1) Part 1 of Schedule 7 of the Traffic Management Act 2004 is amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from74_3">3</td><td>(2) After paragraph (4) insert—</td><td class="diff_next"></td><td class="diff_header" id="to74_3">3</td><td>(2) After paragraph (4) insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from74_4">4</td><td>“4A (1) There is a parking contravention in England if a person causes an obstruction which, without lawful authority or excuse, causes or permits a motor vehicle to stand on a pavement in such a manner as to wilfully obstruct free passage along the pavement.</td><td class="diff_next"></td><td class="diff_header" id="to74_4">4</td><td>“4A (1) There is a parking contravention in England if a person causes an obstruction which, without lawful authority or excuse, causes or permits a motor vehicle to stand on a pavement in such a manner as to wilfully obstruct free passage along the pavement.</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028348" target="_blank">74</a>:</p>
+
+    <table class="diff" id="difflib_chg_to75__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to75__0"><a href="#difflib_chg_to75__top">t</a></td><td class="diff_header" id="from75_1">1</td><td>Schedule 7, page 1<span class="diff_chg">46</span>, line <span class="diff_chg">3</span>2, insert—</td><td class="diff_next"><a href="#difflib_chg_to75__top">t</a></td><td class="diff_header" id="to75_1">1</td><td>Schedule 7, page 1<span class="diff_chg">38</span>, line <span class="diff_chg">2</span>2, insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from75_2">2</td><td>“3 (1) After Paragraph 10 of Schedule 8 to the Traffic Management Act 2004, insert—</td><td class="diff_next"></td><td class="diff_header" id="to75_2">2</td><td>“3 (1) After Paragraph 10 of Schedule 8 to the Traffic Management Act 2004, insert—<span class="diff_add"> “Exercise of functions relating to civil enforcement</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from75_3">3</td><td><span class="diff_sub">“Exercise of functions relating to civil enforcement</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from75_4">4</td><td>11 Any functions related to civil enforcement described by this schedule must be exercised directly by—</td><td class="diff_next"></td><td class="diff_header" id="to75_3">3</td><td>11 Any functions related to civil enforcement described by this schedule must be exercised directly by—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from75_5">5</td><td>(a) the elected mayor for the area of an authority, or</td><td class="diff_next"></td><td class="diff_header" id="to75_4">4</td><td>(a) the elected mayor for the area of an authority, or</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from75_6">6</td><td>(b) a member of an authority who is an elected member of a constituent council.””</td><td class="diff_next"></td><td class="diff_header" id="to75_5">5</td><td>(b) a member of an authority who is an elected member of a constituent council.””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028390" target="_blank">67</a>:</p>
+
+    <table class="diff" id="difflib_chg_to76__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to76__0"><a href="#difflib_chg_to76__top">t</a></td><td class="diff_header" id="from76_1">1</td><td>Schedule 12, page 1<span class="diff_chg">34</span>, leave out sub-paragraph (5)</td><td class="diff_next"><a href="#difflib_chg_to76__top">t</a></td><td class="diff_header" id="to76_1">1</td><td>Schedule 12, page 1<span class="diff_chg">62</span>, leave out sub-paragraph (5)</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028433" target="_blank">25</a>:</p>
+
+    <table class="diff" id="difflib_chg_to77__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to77__0"><a href="#difflib_chg_to77__top">t</a></td><td class="diff_header" id="from77_1">1</td><td>Schedule 12, page 1<span class="diff_chg">7</span>4, line <span class="diff_chg">24</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to77__top">t</a></td><td class="diff_header" id="to77_1">1</td><td>Schedule 12, page 1<span class="diff_chg">6</span>4, line <span class="diff_chg">33</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from77_2">2</td><td>“61DCB Density requirement</td><td class="diff_next"></td><td class="diff_header" id="to77_2">2</td><td>“61DCB Density requirement</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from77_3">3</td><td>(1) A strategic authority issuing a mayoral development order must prioritise applications which—</td><td class="diff_next"></td><td class="diff_header" id="to77_3">3</td><td>(1) A strategic authority issuing a mayoral development order must prioritise applications which—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from77_4">4</td><td>(a) will deliver greater density in urban areas,</td><td class="diff_next"></td><td class="diff_header" id="to77_4">4</td><td>(a) will deliver greater density in urban areas,</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028350" target="_blank">71</a>:</p>
+
+    <table class="diff" id="difflib_chg_to78__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to78__0"><a href="#difflib_chg_to78__top">t</a></td><td class="diff_header" id="from78_1">1</td><td>Schedule 12, page 1<span class="diff_chg">75</span>, line 19 at end insert—</td><td class="diff_next"><a href="#difflib_chg_to78__top">t</a></td><td class="diff_header" id="to78_1">1</td><td>Schedule 12, page 1<span class="diff_chg">63</span>, line 19 at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from78_2">2</td><td>“(ba) After subsection (1BB), insert—</td><td class="diff_next"></td><td class="diff_header" id="to78_2">2</td><td>“(ba) After subsection (1BB), insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from78_3">3</td><td>“(1BBA) When exercising any power under this section, the mayor of a relevant authority must ensure—</td><td class="diff_next"></td><td class="diff_header" id="to78_3">3</td><td>“(1BBA) When exercising any power under this section, the mayor of a relevant authority must ensure—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from78_4">4</td><td>(a) any plans received comply with any Strategic Spatial Energy Plan for the area, and</td><td class="diff_next"></td><td class="diff_header" id="to78_4">4</td><td>(a) any plans received comply with any Strategic Spatial Energy Plan for the area, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028424" target="_blank">68</a>:</p>
+
+    <table class="diff" id="difflib_chg_to79__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to79__0"><a href="#difflib_chg_to79__top">t</a></td><td class="diff_header" id="from79_1">1</td><td>Schedule 12, page 1<span class="diff_sub">7</span>6, line 1, leave out subparagraphs (9) and (10)</td><td class="diff_next"><a href="#difflib_chg_to79__top">t</a></td><td class="diff_header" id="to79_1">1</td><td>Schedule 12, page 16<span class="diff_add">4</span>, line 1, leave out subparagraphs (9) and (10)</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028436" target="_blank">26</a>:</p>
+
+    <table class="diff" id="difflib_chg_to80__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to80__0"><a href="#difflib_chg_to80__top">t</a></td><td class="diff_header" id="from80_1">1</td><td>Schedule 17, page <span class="diff_chg">207</span>, line 2<span class="diff_sub">7</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to80__top">t</a></td><td class="diff_header" id="to80_1">1</td><td>Schedule 17, page <span class="diff_chg">193</span>, line 2, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from80_2">2</td><td>“7A After section 202, insert—</td><td class="diff_next"></td><td class="diff_header" id="to80_2">2</td><td>“7A After section 202, insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from80_3">3</td><td>“202A: restrictions on designation of greenfield land</td><td class="diff_next"></td><td class="diff_header" id="to80_3">3</td><td>“202A: restrictions on designation of greenfield land</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from80_4">4</td><td>Where an MDC exercises any functions in relation to the designation of land for development, the MDC must not designate any development on greenfield land unless there is no available land that has not previously been developed.””</td><td class="diff_next"></td><td class="diff_header" id="to80_4">4</td><td>Where an MDC exercises any functions in relation to the designation of land for development, the MDC must not designate any development on greenfield land unless there is no available land that has not previously been developed.””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028423" target="_blank">69</a>:</p>
+
+    <table class="diff" id="difflib_chg_to81__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to81__0"><a href="#difflib_chg_to81__top">t</a></td><td class="diff_header" id="from81_1">1</td><td>Schedule 17, page <span class="diff_sub">2</span>1<span class="diff_chg">0</span>, line <span class="diff_sub">1</span>2, leave out from “that” to end of line <span class="diff_chg">13</span> and insert “the majority of members of an MDC are elected members of relevant councils”</td><td class="diff_next"><a href="#difflib_chg_to81__top">t</a></td><td class="diff_header" id="to81_1">1</td><td>Schedule 17, page 1<span class="diff_chg">95</span>, line 2<span class="diff_add">3</span>, leave out from “that” to end of line <span class="diff_chg">24</span> and insert “the majority of members of an MDC are elected members of relevant councils”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028434" target="_blank">65</a>:</p>
+
+    <table class="diff" id="difflib_chg_to82__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to82__0"><a href="#difflib_chg_to82__top">t</a></td><td class="diff_header" id="from82_1">1</td><td>Schedule 19, page 2<span class="diff_chg">14</span>, line <span class="diff_chg">30</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to82__top">t</a></td><td class="diff_header" id="to82_1">1</td><td>Schedule 19, page 2<span class="diff_chg">00</span>, line <span class="diff_chg">17</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from82_2">2</td><td>“(d) comply with any Land Use Framework issued by the Secretary of State, and</td><td class="diff_next"></td><td class="diff_header" id="to82_2">2</td><td>“(d) comply with any Land Use Framework issued by the Secretary of State, and</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from82_3">3</td><td>(e) comply with any local nature recovery strategies applicable to the area covered by the authority.</td><td class="diff_next"></td><td class="diff_header" id="to82_3">3</td><td>(e) comply with any local nature recovery strategies applicable to the area covered by the authority.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from82_4">4</td><td>(2A) The Secretary of State must take steps to support a mayoral combined authority in complying with the provisions of paragraphs (2)(d) and (2)(e) of this section.”</td><td class="diff_next"></td><td class="diff_header" id="to82_4">4</td><td>(2A) The Secretary of State must take steps to support a mayoral combined authority in complying with the provisions of paragraphs (2)(d) and (2)(e) of this section.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028354" target="_blank">80</a>:</p>
+
+    <table class="diff" id="difflib_chg_to83__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to83__0"><a href="#difflib_chg_to83__top">t</a></td><td class="diff_header" id="from83_1">1</td><td>Schedule 19, page 2<span class="diff_chg">14</span>, line <span class="diff_chg">30</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to83__top">t</a></td><td class="diff_header" id="to83_1">1</td><td>Schedule 19, page 2<span class="diff_chg">00</span>, line <span class="diff_chg">17</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from83_2">2</td><td>“(d) identify the plan’s contribution to targets set out by—</td><td class="diff_next"></td><td class="diff_header" id="to83_2">2</td><td>“(d) identify the plan’s contribution to targets set out by—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from83_3">3</td><td>(i) sections 1 to 3 of the Environment Act 2021,</td><td class="diff_next"></td><td class="diff_header" id="to83_3">3</td><td>(i) sections 1 to 3 of the Environment Act 2021,</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from83_4">4</td><td>(ii) Part 1 of the Climate Change Act 2008, and</td><td class="diff_next"></td><td class="diff_header" id="to83_4">4</td><td>(ii) Part 1 of the Climate Change Act 2008, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028406" target="_blank">83</a>:</p>
+
+    <table class="diff" id="difflib_chg_to84__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to84__0"><a href="#difflib_chg_to84__top">t</a></td><td class="diff_header" id="from84_1">1</td><td>Schedule 19, page 21<span class="diff_sub">5</span>, line <span class="diff_chg">19</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to84__top">t</a></td><td class="diff_header" id="to84_1">1</td><td>Schedule 19, page 2<span class="diff_add">0</span>1, line <span class="diff_chg">6</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from84_2">2</td><td>“107MA Funding and support relating for Local Growth plans</td><td class="diff_next"></td><td class="diff_header" id="to84_2">2</td><td>“107MA Funding and support relating for Local Growth plans</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from84_3">3</td><td>(1) The Secretary of State has a duty to ensure that mayoral combined authorities have sufficient financial resources and adequate administrative support to discharge effectively any functions relating to the—</td><td class="diff_next"></td><td class="diff_header" id="to84_3">3</td><td>(1) The Secretary of State has a duty to ensure that mayoral combined authorities have sufficient financial resources and adequate administrative support to discharge effectively any functions relating to the—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from84_4">4</td><td>(a) preparation,</td><td class="diff_next"></td><td class="diff_header" id="to84_4">4</td><td>(a) preparation,</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028357" target="_blank">66</a>:</p>
+
+    <table class="diff" id="difflib_chg_to85__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to85__1"><a href="#difflib_chg_to85__1">n</a></td><td class="diff_header" id="from85_1">1</td><td>Schedule 19, page 2<span class="diff_chg">16</span>, line <span class="diff_chg">29</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to85__1">n</a></td><td class="diff_header" id="to85_1">1</td><td>Schedule 19, page 2<span class="diff_chg">02</span>, line <span class="diff_chg">14</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from85_2">2</td><td>“(d) comply with any Land Use Framework applicable to the area covered by the authority, and</td><td class="diff_next"></td><td class="diff_header" id="to85_2">2</td><td>“(d) comply with any Land Use Framework applicable to the area covered by the authority, and</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from85_3">3</td><td>(e) comply with any local nature recovery strategies applicable to the area covered by the authority.”</td><td class="diff_next"></td><td class="diff_header" id="to85_3">3</td><td>(e) comply with any local nature recovery strategies applicable to the area covered by the authority.”</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to85__top">t</a></td><td class="diff_header" id="from85_4">4</td><td>“(2A) <span class="diff_sub">T</span>he Secretary of State must make provision to support a mayoral CCA in complying with the provisions of paragraphs (2)(d) and (2)(e) of this section.”</td><td class="diff_next"><a href="#difflib_chg_to85__top">t</a></td><td class="diff_header" id="to85_4">4</td><td>“(2A) he Secretary of State must make provision to support a mayoral CCA in complying with the provisions of paragraphs (2)(d) and (2)(e) of this section.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028383" target="_blank">81</a>:</p>
+
+    <table class="diff" id="difflib_chg_to87__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to87__0"><a href="#difflib_chg_to87__top">t</a></td><td class="diff_header" id="from87_1">1</td><td>Schedule 19, page 2<span class="diff_chg">16</span>, line <span class="diff_chg">29</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to87__top">t</a></td><td class="diff_header" id="to87_1">1</td><td>Schedule 19, page 2<span class="diff_chg">02</span>, line <span class="diff_chg">14</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from87_2">2</td><td>“(d) identify the plan’s contribution to targets set out by—</td><td class="diff_next"></td><td class="diff_header" id="to87_2">2</td><td>“(d) identify the plan’s contribution to targets set out by—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from87_3">3</td><td>(i) sections 1 to 3 of the Environment Act 2021,</td><td class="diff_next"></td><td class="diff_header" id="to87_3">3</td><td>(i) sections 1 to 3 of the Environment Act 2021,</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from87_4">4</td><td>(ii) Part 1 of the Climate Change Act 2008, and</td><td class="diff_next"></td><td class="diff_header" id="to87_4">4</td><td>(ii) Part 1 of the Climate Change Act 2008, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028435" target="_blank">84</a>:</p>
+
+    <table class="diff" id="difflib_chg_to88__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to88__0"><a href="#difflib_chg_to88__top">t</a></td><td class="diff_header" id="from88_1">1</td><td>Schedule 19, page 2<span class="diff_chg">17</span>, line 1<span class="diff_sub">5</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to88__top">t</a></td><td class="diff_header" id="to88_1">1</td><td>Schedule 19, page 2<span class="diff_chg">03</span>, line 1, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from88_2">2</td><td>“32BA Funding and support relating to local growth plans</td><td class="diff_next"></td><td class="diff_header" id="to88_2">2</td><td>“32BA Funding and support relating to local growth plans</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from88_3">3</td><td>(1) The Secretary of State has a duty to ensure that mayoral CCAs have sufficient financial resources and adequate administrative support to discharge effectively any functions relating to the—</td><td class="diff_next"></td><td class="diff_header" id="to88_3">3</td><td>(1) The Secretary of State has a duty to ensure that mayoral CCAs have sufficient financial resources and adequate administrative support to discharge effectively any functions relating to the—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from88_4">4</td><td>(a) preparation,</td><td class="diff_next"></td><td class="diff_header" id="to88_4">4</td><td>(a) preparation,</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028344" target="_blank">49</a>:</p>
+
+    <table class="diff" id="difflib_chg_to89__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to89__0"><a href="#difflib_chg_to89__top">t</a></td><td class="diff_header" id="from89_1">1</td><td>Schedule 21, page 2<span class="diff_chg">24</span>, leave out lines <span class="diff_chg">6</span> to 1<span class="diff_sub">2</span></td><td class="diff_next"><a href="#difflib_chg_to89__top">t</a></td><td class="diff_header" id="to89_1">1</td><td>Schedule 21, page 2<span class="diff_chg">09</span>, leave out lines <span class="diff_chg">25</span> to <span class="diff_add">3</span>1</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028432" target="_blank">2</a>:</p>
+
+    <table class="diff" id="difflib_chg_to91__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to91__0"><a href="#difflib_chg_to91__top">t</a></td><td class="diff_header" id="from91_1">1</td><td>Page 2<span class="diff_chg">61</span>, line <span class="diff_chg">14</span>, leave out Schedule 24</td><td class="diff_next"><a href="#difflib_chg_to91__top">t</a></td><td class="diff_header" id="to91_1">1</td><td>Page 2<span class="diff_chg">45</span>, line <span class="diff_chg">28</span>, leave out Schedule 24</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028387" target="_blank">38</a>:</p>
+
+    <table class="diff" id="difflib_chg_to93__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to93__0"><a href="#difflib_chg_to93__top">t</a></td><td class="diff_header" id="from93_1">1</td><td>Schedule 24, page 26<span class="diff_sub">2</span>, line <span class="diff_chg">14</span>, after “government” insert—</td><td class="diff_next"><a href="#difflib_chg_to93__top">t</a></td><td class="diff_header" id="to93_1">1</td><td>Schedule 24, page 2<span class="diff_add">4</span>6, line <span class="diff_chg">27</span>, after “government” insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from93_2">2</td><td>“having particular regard to the need for the new single tier of local government, or new unitary council, to—</td><td class="diff_next"></td><td class="diff_header" id="to93_2">2</td><td>“having particular regard to the need for the new single tier of local government, or new unitary council, to—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from93_3">3</td><td>(a) be of an appropriate geographical size, giving consideration to—</td><td class="diff_next"></td><td class="diff_header" id="to93_3">3</td><td>(a) be of an appropriate geographical size, giving consideration to—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from93_4">4</td><td>(i) economic zones,</td><td class="diff_next"></td><td class="diff_header" id="to93_4">4</td><td>(i) economic zones,</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028394" target="_blank">4</a>:</p>
+
+    <table class="diff" id="difflib_chg_to94__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to94__0"><a href="#difflib_chg_to94__top">t</a></td><td class="diff_header" id="from94_1">1</td><td>Page 2<span class="diff_sub">6</span>5, line <span class="diff_chg">33</span>, leave out Schedule 25</td><td class="diff_next"><a href="#difflib_chg_to94__top">t</a></td><td class="diff_header" id="to94_1">1</td><td>Page 25<span class="diff_add">0</span>, line <span class="diff_chg">7</span>, leave out Schedule 25</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028340" target="_blank">28</a>:</p>
+
+    <table class="diff" id="difflib_chg_to95__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to95__0"><a href="#difflib_chg_to95__top">t</a></td><td class="diff_header" id="from95_1">1</td><td>Schedule 25, page 2<span class="diff_chg">69</span>, leave out lines <span class="diff_chg">26</span> to <span class="diff_chg">35</span></td><td class="diff_next"><a href="#difflib_chg_to95__top">t</a></td><td class="diff_header" id="to95_1">1</td><td>Schedule 25, page 2<span class="diff_chg">54</span>, leave out lines <span class="diff_chg">3</span> to <span class="diff_chg">12</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028341" target="_blank">29</a>:</p>
+
+    <table class="diff" id="difflib_chg_to96__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to96__0"><a href="#difflib_chg_to96__top">t</a></td><td class="diff_header" id="from96_1">1</td><td>Schedule 25, page 2<span class="diff_chg">69</span>, line <span class="diff_chg">29</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to96__top">t</a></td><td class="diff_header" id="to96_1">1</td><td>Schedule 25, page 2<span class="diff_chg">54</span>, line <span class="diff_chg">6</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from96_2">2</td><td>“(aa) after subsection (2)(b), insert—</td><td class="diff_next"></td><td class="diff_header" id="to96_2">2</td><td>“(aa) after subsection (2)(b), insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from96_3">3</td><td>“(2A) For the purposes of subsection (2)(b), at least one of the newspapers must—</td><td class="diff_next"></td><td class="diff_header" id="to96_3">3</td><td>“(2A) For the purposes of subsection (2)(b), at least one of the newspapers must—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from96_4">4</td><td>(a) have paid-for of free distribution in the relevant local area, and</td><td class="diff_next"></td><td class="diff_header" id="to96_4">4</td><td>(a) have paid-for of free distribution in the relevant local area, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028409" target="_blank">6</a>:</p>
+
+    <table class="diff" id="difflib_chg_to97__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to97__0"><a href="#difflib_chg_to97__top">t</a></td><td class="diff_header" id="from97_1">1</td><td>Page 2<span class="diff_chg">71</span>, line 1<span class="diff_sub">9</span>, leave out Schedule 26</td><td class="diff_next"><a href="#difflib_chg_to97__top">t</a></td><td class="diff_header" id="to97_1">1</td><td>Page 2<span class="diff_chg">56</span>, line 1, leave out Schedule 26</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028338" target="_blank">30</a>:</p>
+
+    <table class="diff" id="difflib_chg_to98__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to98__0"><a href="#difflib_chg_to98__top">t</a></td><td class="diff_header" id="from98_1">1</td><td>Schedule 27, page 2<span class="diff_chg">80</span>, leave out lines <span class="diff_sub">2</span>1 to <span class="diff_sub">2</span>8</td><td class="diff_next"><a href="#difflib_chg_to98__top">t</a></td><td class="diff_header" id="to98_1">1</td><td>Schedule 27, page 2<span class="diff_chg">65</span>, leave out lines 1 to 8</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028373" target="_blank">32</a>:</p>
+
+    <table class="diff" id="difflib_chg_to99__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to99__0"><a href="#difflib_chg_to99__top">t</a></td><td class="diff_header" id="from99_1">1</td><td>Schedule 27, page 2<span class="diff_chg">80</span>, leave out lines <span class="diff_chg">29</span> to <span class="diff_chg">32</span></td><td class="diff_next"><a href="#difflib_chg_to99__top">t</a></td><td class="diff_header" id="to99_1">1</td><td>Schedule 27, page 2<span class="diff_chg">65</span>, leave out lines <span class="diff_chg">13</span> to <span class="diff_chg">15</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028371" target="_blank">31</a>:</p>
+
+    <table class="diff" id="difflib_chg_to100__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to100__0"><a href="#difflib_chg_to100__top">t</a></td><td class="diff_header" id="from100_1">1</td><td>Schedule 27, page 2<span class="diff_chg">80</span>, leave out from <span class="diff_chg">“</span>value<span class="diff_chg">”</span> in line <span class="diff_chg">3</span>0 to <span class="diff_chg">'</span>the<span class="diff_chg">'</span> in line <span class="diff_sub">3</span>1</td><td class="diff_next"><a href="#difflib_chg_to100__top">t</a></td><td class="diff_header" id="to100_1">1</td><td>Schedule 27, page 2<span class="diff_chg">65</span>, leave out from <span class="diff_chg">‘</span>value<span class="diff_chg">’</span> in line <span class="diff_chg">1</span>0 to <span class="diff_chg">‘</span>the<span class="diff_chg">’</span> in line 1<span class="diff_add">1</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028337" target="_blank">57</a>:</p>
+
+    <table class="diff" id="difflib_chg_to102__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to102__0"><a href="#difflib_chg_to102__top">t</a></td><td class="diff_header" id="from102_1">1</td><td>Schedule 27, page 2<span class="diff_chg">81</span>, line <span class="diff_chg">26</span>, after “economic,” insert “, environmental,”</td><td class="diff_next"><a href="#difflib_chg_to102__top">t</a></td><td class="diff_header" id="to102_1">1</td><td>Schedule 27, page 2<span class="diff_chg">65</span>, line <span class="diff_chg">41</span>, after “economic,” insert “, environmental,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028374" target="_blank">58</a>:</p>
+
+    <table class="diff" id="difflib_chg_to104__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to104__0"><a href="#difflib_chg_to104__top">t</a></td><td class="diff_header" id="from104_1">1</td><td>Schedule 27, page 2<span class="diff_chg">81</span>, line <span class="diff_chg">30</span>, after “economic,” insert “, environmental,”</td><td class="diff_next"><a href="#difflib_chg_to104__top">t</a></td><td class="diff_header" id="to104_1">1</td><td>Schedule 27, page 2<span class="diff_chg">66</span>, line <span class="diff_chg">4</span>, after “economic,” insert “, environmental,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028365" target="_blank">59</a>:</p>
+
+    <table class="diff" id="difflib_chg_to106__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to106__0"><a href="#difflib_chg_to106__top">t</a></td><td class="diff_header" id="from106_1">1</td><td>Schedule 27, page 2<span class="diff_chg">81</span>, line <span class="diff_chg">38</span>, after “economic,” insert “, environmental,”</td><td class="diff_next"><a href="#difflib_chg_to106__top">t</a></td><td class="diff_header" id="to106_1">1</td><td>Schedule 27, page 2<span class="diff_chg">66</span>, line <span class="diff_chg">12</span>, after “economic,” insert “, environmental,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028402" target="_blank">60</a>:</p>
+
+    <table class="diff" id="difflib_chg_to108__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to108__0"><a href="#difflib_chg_to108__top">t</a></td><td class="diff_header" id="from108_1">1</td><td>Schedule 27, page 2<span class="diff_chg">82</span>, line <span class="diff_chg">2</span>, after “economic,” insert “, environmental,”</td><td class="diff_next"><a href="#difflib_chg_to108__top">t</a></td><td class="diff_header" id="to108_1">1</td><td>Schedule 27, page 2<span class="diff_chg">66</span>, line <span class="diff_chg">18</span>, after “economic,” insert “, environmental,”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028360" target="_blank">82</a>:</p>
+
+    <table class="diff" id="difflib_chg_to110__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to110__0"><a href="#difflib_chg_to110__top">t</a></td><td class="diff_header" id="from110_1">1</td><td>Schedule 27, page 2<span class="diff_chg">83</span>, line <span class="diff_chg">8</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to110__top">t</a></td><td class="diff_header" id="to110_1">1</td><td>Schedule 27, page 2<span class="diff_chg">67</span>, line <span class="diff_chg">23</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from110_2">2</td><td><span class="diff_sub">“</span>(1A) Where a local authority is responsible for assessing whether land in its area is a sporting asset of community value, the Secretary of State must ensure the authority receives adequate funding to make the assessment.”</td><td class="diff_next"></td><td class="diff_header" id="to110_2">2</td><td>(1A) Where a local authority is responsible for assessing whether land in its area is a sporting asset of community value, the Secretary of State must ensure the authority receives adequate funding to make the assessment.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028381" target="_blank">64</a>:</p>
+
+    <table class="diff" id="difflib_chg_to112__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to112__0"><a href="#difflib_chg_to112__top">t</a></td><td class="diff_header" id="from112_1">1</td><td>Schedule 27, page 29<span class="diff_sub">5</span>, line <span class="diff_chg">8</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to112__top">t</a></td><td class="diff_header" id="to112_1">1</td><td>Schedule 27, page 2<span class="diff_add">7</span>9, line <span class="diff_chg">17</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from112_2">2</td><td><span class="diff_sub">“</span>(2A) The relevant local authority must as far as reasonably practicable support the preferred community buyer in securing the purchase land of community value.”</td><td class="diff_next"></td><td class="diff_header" id="to112_2">2</td><td>(2A) The relevant local authority must as far as reasonably practicable support the preferred community buyer in securing the purchase land of community value.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028368" target="_blank">34</a>:</p>
+
+    <table class="diff" id="difflib_chg_to114__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to114__0"><a href="#difflib_chg_to114__top">t</a></td><td class="diff_header" id="from114_1">1</td><td>Schedule 27, page 29<span class="diff_sub">5</span>, line <span class="diff_chg">9</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to114__top">t</a></td><td class="diff_header" id="to114_1">1</td><td>Schedule 27, page 2<span class="diff_add">7</span>9, line <span class="diff_chg">17</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from114_2">2</td><td>“(2A) The local authority must also arrange with the owner of the land for the preferred community buyer to have had the opportunity to view the land prior to a meeting under subsection (2).”</td><td class="diff_next"></td><td class="diff_header" id="to114_2">2</td><td>“(2A) The local authority must also arrange with the owner of the land for the preferred community buyer to have had the opportunity to view the land prior to a meeting under subsection (2).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028405" target="_blank">63</a>:</p>
+
+    <table class="diff" id="difflib_chg_to116__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to116__0"><a href="#difflib_chg_to116__top">t</a></td><td class="diff_header" id="from116_1">1</td><td>Schedule 27, page 2<span class="diff_chg">96</span>, line 2<span class="diff_chg">0</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to116__top">t</a></td><td class="diff_header" id="to116_1">1</td><td>Schedule 27, page 2<span class="diff_chg">80</span>, line 2<span class="diff_chg">8</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from116_2">2</td><td><span class="diff_sub">“</span>(9A) The Secretary of State must ensure local authorities are adequately funded to meet the expenses of a valuation under this section.”</td><td class="diff_next"></td><td class="diff_header" id="to116_2">2</td><td>(9A) The Secretary of State must ensure local authorities are adequately funded to meet the expenses of a valuation under this section.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4002/stages/20265/amendments/10028342" target="_blank">33</a>:</p>
+
+    <table class="diff" id="difflib_chg_to117__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Test</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to117__0"><a href="#difflib_chg_to117__top">t</a></td><td class="diff_header" id="from117_1">1</td><td>Schedule 27, page 2<span class="diff_chg">99</span>, line <span class="diff_chg">12</span>, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to117__top">t</a></td><td class="diff_header" id="to117_1">1</td><td>Schedule 27, page 2<span class="diff_chg">83</span>, line <span class="diff_chg">8</span>, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from117_2">2</td><td>“(f) matters relating to requirements about special consideration for land of community value in planning applications affecting an area of land of community value.”</td><td class="diff_next"></td><td class="diff_header" id="to117_2">2</td><td>“(f) matters relating to requirements about special consideration for land of community value in planning applications affecting an area of land of community value.”</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">2</strong> amendments have incorrect explanatory statements in the API: </p>
+<p>65<br>66</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>
