@@ -106,6 +106,9 @@
       word-break: break-word;
       hyphens: auto;
     }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
 
     /* -------------------- added names table -------------------- */
     .an-table {
@@ -113,10 +116,10 @@
       /* table-layout: fixed; */
       /* border-collapse: collapse; */
     }
-    .sticky-head th{
+    .sticky-head th, .diff th{
       /* background: white; */
       position: sticky;
-      top: 0; /* Don't forget this, required for the stickiness */
+      top: -1px; /* Don't forget this, required for the stickiness */
       z-index: 1;
     }
 
@@ -231,16 +234,16 @@
             <div class="block-page amendments-check" id="content-goes-here">
               <h1>Check Amendments on Bills.parliament.uk</h1>
 
-            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the bills API and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Diego Garcia Military Base and British Indian Ocean Territory Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Diego Garcia Military Base and British Indian Ocean Territory Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Diego Garcia Military Base and British Indian Ocean Territory Bill</td></tr><tr><td>Published date</td><td>Monday 20 October 2025</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Finance (No. 2) Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Finance (No. 2) Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Finance (No. 2) Bill</td></tr><tr><td>Published date</td><td>Wednesday 04 February 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Missing amendments" id="card-19"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
       <div class="secondary-info">
       <!-- This is where secondary info goes -->
-      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they are almost certainly also missing from bills.parliament. </p><p>Missing content: <strong>31</strong><br>NC14 (hoc23), 9 (hoc18), NC8 (hoc15), NC15 (hoc25), NC1 (hoc1), NC10 (hoc19), NC3 (hoc5), 7 (hoc13), 4 (hoc9), 5 (hoc10), 3 (hoc8), NC6 (hoc11), NC13 (hoc22), NC4 (hoc6), 11 (hoc26), NC5 (hoc7), NC2 (hoc3), NC12 (hoc21), NC16 (hoc29), 6 (hoc12), 1 (hoc2), NC7 (hoc14), 2 (hoc4), 10 (hoc24), NC9 (hoc17), 12 (hoc27), 8 (hoc16), 14 (hoc31), NC11 (hoc20), NC17 (hoc30), 13 (hoc28)</p></div>
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they  also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
     </div>
     <div class="info">
       <div class="info-inner">
@@ -253,7 +256,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Check Names" id="card-20"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
@@ -264,7 +267,12 @@
     <div class="info">
       <div class="info-inner">
         <!-- Tertiary info -->
-      </div>
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>8</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">1 (hoc137), 2 (hoc138), 3 (hoc139), 4 (hoc140), 5 (hoc141), 6 (hoc142), 7 (hoc143), 8 (hoc144)</p>
+</div></div>
     </div>
   </div>
 </div>
@@ -272,7 +280,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Star Check" id="card-21"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
@@ -283,7 +291,12 @@
     <div class="info">
       <div class="info-inner">
         <!-- Tertiary info -->
-      </div>
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>8</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">1 (★), 2 (★), 3 (★), 4 (★), 5 (★), 6 (★), 7 (★), 8 (★)</p>
+</div></div>
     </div>
   </div>
 </div>
@@ -291,13 +304,14 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Changed amendments" id="card-4"><span class="arrow"> </span>Changed amendments<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Incorrect amendments" id="card-22"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
       <div class="secondary-info">
       <!-- This is where secondary info goes -->
-      <p>Amendments in the API match those in the XML 😀</p></div>
+      <p><strong>Note:</strong> There can be false positives. Some whitespace differences are ignored.</p>
+<p>Amendments in the API match those in the XML 😀</p></div>
     </div>
     <div class="info">
       <div class="info-inner">
@@ -310,7 +324,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Decision Check" id="card-23"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
@@ -329,7 +343,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Explanatory Statements" id="card-24"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">

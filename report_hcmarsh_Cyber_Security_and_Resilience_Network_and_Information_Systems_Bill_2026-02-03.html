@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Cyber Security and Resilience (Network and Information Systems) Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Cyber Security and Resilience (Network and Information Systems) Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Cyber Security and Resilience (Network and Information Systems) Bill</td></tr><tr><td>Published date</td><td>Wednesday 04 February 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they  also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Zero</strong> amendments have name changes.</p><div></div></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>43</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">11 (opc4), 12 (opc5), 13 (opc11), 25 (hoc27), 28 (hoc35), 10 (hoc12), 1 (hoc1), 2 (hoc2), 3 (hoc3), 4 (hoc4), 5 (hoc5), 6 (hoc6), 7 (hoc7), 8 (hoc8), 14 (opc7), 15 (opc19), 16 (opc20), 17 (opc21), 18 (opc22), 9 (hoc9), 19 (opc13), 20 (opc14), 21 (opc15), 22 (opc16), 26 (hoc32), 27 (hoc33), 23 (opc17), 24 (opc18), NC1 (hoc11), NC2 (hoc17), NC3 (hoc18), NC4 (hoc19), NC5 (hoc20), NC6 (hoc21), NC7 (hoc22), NC8 (hoc24), NC9 (hoc25), NC10 (hoc26), NC11 (hoc28), NC12 (hoc29), NC13 (hoc30), NC14 (hoc31), NC15 (hoc34)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All amendments have correct stars</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>43</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">11 (No Star), 12 (No Star), 13 (No Star), 25 (☆), 28 (☆), 10 (No Star), 1 (No Star), 2 (No Star), 3 (No Star), 4 (No Star), 5 (No Star), 6 (No Star), 7 (No Star), 8 (No Star), 14 (No Star), 15 (No Star), 16 (No Star), 17 (No Star), 18 (No Star), 9 (No Star), 19 (No Star), 20 (No Star), 21 (No Star), 22 (No Star), 26 (☆), 27 (☆), 23 (No Star), 24 (No Star), NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC5 (No Star), NC6 (No Star), NC7 (No Star), NC8 (☆), NC9 (☆), NC10 (☆), NC11 (☆), NC12 (☆), NC13 (☆), NC14 (☆), NC15 (☆)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-4"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives. Some whitespace differences are ignored.</p>
+<p><strong class="red">5</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4035/stages/20407/amendments/10032566" target="_blank">22</a>:</p>
+
+    <table class="diff" id="difflib_chg_to0__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__0"></td><td class="diff_header" id="from0_11">11</td><td>; (b) omit the “or”</td><td class="diff_next"></td><td class="diff_header" id="to0_11">11</td><td>; (b) omit the “or”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_12">12</td><td>at the end of sub-paragraph (b); (c) for sub-paragraph (c) substitute—</td><td class="diff_next"></td><td class="diff_header" id="to0_12">12</td><td>at the end of sub-paragraph (b); (c) for sub-paragraph (c) substitute—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__1">n</a></td><td class="diff_header" id="from0_13">13</td><td><span class="diff_sub">“</span>(c) sending it by post to the person’s proper address or by email to the person’s email address.”</td><td class="diff_next"><a href="#difflib_chg_to0__1">n</a></td><td class="diff_header" id="to0_13">13</td><td>(c) sending it by post to the person’s proper address or by email to the person’s email address.”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_14">14</td><td>(3) In each of paragraphs (2) and (3)—</td><td class="diff_next"></td><td class="diff_header" id="to0_14">14</td><td>(3) In each of paragraphs (2) and (3)—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_15">15</td><td>(a) after “document”</td><td class="diff_next"></td><td class="diff_header" id="to0_15">15</td><td>(a) after “document”</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__1"></td><td class="diff_header" id="from0_22">22</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to0_22">22</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_23">23</td><td>(5) For paragraph (5) substitute—</td><td class="diff_next"></td><td class="diff_header" id="to0_23">23</td><td>(5) For paragraph (5) substitute—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__2">n</a></td><td class="diff_header" id="from0_24">24</td><td><span class="diff_sub">“</span>(5) For the purposes of this regulation, a person’s “proper address”</td><td class="diff_next"><a href="#difflib_chg_to0__2">n</a></td><td class="diff_header" id="to0_24">24</td><td>(5) For the purposes of this regulation, a person’s “proper address”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_25">25</td><td>is—</td><td class="diff_next"></td><td class="diff_header" id="to0_25">25</td><td>is—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_26">26</td><td>(a) in a case where the person is a body corporate with a registered office in the United Kingdom, that office; (b) in a case where paragraph (a) does not apply and the person is a body corporate, partnership or unincorporated body with a principal office in the United Kingdom, that office; (c) in any other case, an address in the United Kingdom at which the person serving or giving the document, notice or direction believes, on reasonable grounds, that it will come to the attention of the person on whom it is to be served or to whom it is to be given.</td><td class="diff_next"></td><td class="diff_header" id="to0_26">26</td><td>(a) in a case where the person is a body corporate with a registered office in the United Kingdom, that office; (b) in a case where paragraph (a) does not apply and the person is a body corporate, partnership or unincorporated body with a principal office in the United Kingdom, that office; (c) in any other case, an address in the United Kingdom at which the person serving or giving the document, notice or direction believes, on reasonable grounds, that it will come to the attention of the person on whom it is to be served or to whom it is to be given.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__2"></td><td class="diff_header" id="from0_30">30</td><td>(c) if no email address has been so provided or published, an email address by means of which the person serving or giving the document, notice or direction believes, on reasonable grounds, that it will come to the attention of that person.”</td><td class="diff_next"></td><td class="diff_header" id="to0_30">30</td><td>(c) if no email address has been so provided or published, an email address by means of which the person serving or giving the document, notice or direction believes, on reasonable grounds, that it will come to the attention of that person.”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_31">31</td><td>(6) After paragraph (5A) (inserted by sub-paragraph (5)) insert—</td><td class="diff_next"></td><td class="diff_header" id="to0_31">31</td><td>(6) After paragraph (5A) (inserted by sub-paragraph (5)) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="from0_32">32</td><td><span class="diff_sub">“</span>(5B) A document, notice or direction sent to a person by email is, unless the contrary is proved, to be treated as having been served or given at 9am on the working day immediately following the day on which it was sent.</td><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="to0_32">32</td><td>(5B) A document, notice or direction sent to a person by email is, unless the contrary is proved, to be treated as having been served or given at 9am on the working day immediately following the day on which it was sent.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_33">33</td><td>(5C) In paragraph (5B) “working day”</td><td class="diff_next"></td><td class="diff_header" id="to0_33">33</td><td>(5C) In paragraph (5B) “working day”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_34">34</td><td>means a day other than a Saturday, a Sunday, Christmas Day, Good Friday or a bank holiday under the Banking and Financial Dealings Act 1971 in any part of the United Kingdom.””</td><td class="diff_next"></td><td class="diff_header" id="to0_34">34</td><td>means a day other than a Saturday, a Sunday, Christmas Day, Good Friday or a bank holiday under the Banking and Financial Dealings Act 1971 in any part of the United Kingdom.””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4035/stages/20407/amendments/10032543" target="_blank">NC1</a>:</p>
+
+    <table class="diff" id="difflib_chg_to1__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to1__0"></td><td class="diff_header" id="from1_3">3</td><td>(1) The NIS Regulations are amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to1_3">3</td><td>(1) The NIS Regulations are amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td><td class="diff_next"></td><td class="diff_header" id="to1_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="from1_5">5</td><td><span class="diff_sub">“Food supply</span></td><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_6">6</td><td><span class="diff_sub">Food supply chain</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_7">7</td><td>The Secretary of State for Environment, Food and Rural Affairs (United Kingdom)</td><td class="diff_next"></td><td class="diff_header" id="to1_5">5</td><td><span class="diff_add">“Food supplyFood supply chain</span>The Secretary of State for Environment, Food and Rural Affairs (United Kingdom)</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_8">8</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 11 insert—</td><td class="diff_next"></td><td class="diff_header" id="to1_6">6</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 11 insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_9">9</td><td>“The food supply chain subsector</td><td class="diff_next"></td><td class="diff_header" id="to1_7">7</td><td>“The food supply chain subsector</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4035/stages/20407/amendments/10032676" target="_blank">NC8</a>:</p>
+
+    <table class="diff" id="difflib_chg_to2__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__0"></td><td class="diff_header" id="from2_3">3</td><td>(1) The NIS Regulations are amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_3">3</td><td>(1) The NIS Regulations are amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to the energy sector, insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to the energy sector, insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="from2_5">5</td><td><span class="diff_sub">“Local Government</span></td><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_6">6</td><td><span class="diff_sub">Local Government</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_7">7</td><td>The Secretary of State for Housing, Communities and Local Government”</td><td class="diff_next"></td><td class="diff_header" id="to2_5">5</td><td><span class="diff_add">“Local GovernmentLocal Government</span>The Secretary of State for Housing, Communities and Local Government”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_8">8</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 11 insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_6">6</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 11 insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_9">9</td><td>“The Local Government Sector</td><td class="diff_next"></td><td class="diff_header" id="to2_7">7</td><td>“The Local Government Sector</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4035/stages/20407/amendments/10032668" target="_blank">NC11</a>:</p>
+
+    <table class="diff" id="difflib_chg_to3__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to3__0"></td><td class="diff_header" id="from3_3">3</td><td>(1) The NIS Regulations are amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to3_3">3</td><td>(1) The NIS Regulations are amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td><td class="diff_next"></td><td class="diff_header" id="to3_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="from3_5">5</td><td><span class="diff_sub">“Elections</span></td><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="to3_5">5</td><td><span class="diff_add">“ElectionsElectoral infrastructureThe Electoral Commission”</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_6">6</td><td><span class="diff_sub">Electoral infrastructure</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_7">7</td><td><span class="diff_sub">The Electoral Commission”</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_8">8</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 10 insert—</td><td class="diff_next"></td><td class="diff_header" id="to3_6">6</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 10 insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_9">9</td><td>“The electoral infrastructure subsector</td><td class="diff_next"></td><td class="diff_header" id="to3_7">7</td><td>“The electoral infrastructure subsector</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4035/stages/20407/amendments/10032669" target="_blank">NC12</a>:</p>
+
+    <table class="diff" id="difflib_chg_to4__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to4__0"></td><td class="diff_header" id="from4_3">3</td><td>(1) The NIS Regulations are amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to4_3">3</td><td>(1) The NIS Regulations are amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td><td class="diff_next"></td><td class="diff_header" id="to4_4">4</td><td>(2) In the table in Schedule 1 (designated competent authorities), after the entry relating to digital infrastructure insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="from4_5">5</td><td><span class="diff_sub">“Government</span></td><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_6">6</td><td><span class="diff_sub">Political parties</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_7">7</td><td>The Secretary of State for Housing, Communities and Local Government”</td><td class="diff_next"></td><td class="diff_header" id="to4_5">5</td><td><span class="diff_add">“GovernmentPolitical parties</span>The Secretary of State for Housing, Communities and Local Government”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_8">8</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 10 insert—</td><td class="diff_next"></td><td class="diff_header" id="to4_6">6</td><td>(3) In Schedule 2 (essential services and threshold requirements), after paragraph 10 insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_9">9</td><td>“The political parties subsector</td><td class="diff_next"></td><td class="diff_header" id="to4_7">7</td><td>“The political parties subsector</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>

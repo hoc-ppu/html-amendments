@@ -106,6 +106,9 @@
       word-break: break-word;
       hyphens: auto;
     }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
 
     /* -------------------- added names table -------------------- */
     .an-table {
@@ -113,10 +116,10 @@
       /* table-layout: fixed; */
       /* border-collapse: collapse; */
     }
-    .sticky-head th{
+    .sticky-head th, .diff th{
       /* background: white; */
       position: sticky;
-      top: 0; /* Don't forget this, required for the stickiness */
+      top: -1px; /* Don't forget this, required for the stickiness */
       z-index: 1;
     }
 
@@ -231,16 +234,16 @@
             <div class="block-page amendments-check" id="content-goes-here">
               <h1>Check Amendments on Bills.parliament.uk</h1>
 
-            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the bills API and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Biodiversity Beyond National Jurisdiction Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Biodiversity Beyond National Jurisdiction Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Biodiversity Beyond National Jurisdiction Bill</td></tr><tr><td>Published date</td><td>Friday 14 November 2025</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Railways Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Railways Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Railways Bill</td></tr><tr><td>Published date</td><td>Tuesday 03 February 2026</td></tr><tr><td>List Type</td><td>Committee Stage Decisions</td></tr></tbody></table></div><div></div><div></div><section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Missing amendments" id="card-7"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
       <div class="secondary-info">
       <!-- This is where secondary info goes -->
-      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they are almost certainly also missing from bills.parliament. </p><p>Missing content: <strong>4</strong><br>4 (hoc1), 5 (hoc3), NC1 (hoc2), NC2 (hoc4)</p></div>
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments avaliable via the API. This means that they  also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
     </div>
     <div class="info">
       <div class="info-inner">
@@ -253,7 +256,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Check Names" id="card-8"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
@@ -266,9 +269,9 @@
         <!-- Tertiary info -->
       <div class="collapsible collapsible-small closed">
   <div class="collapsible-header collapsible-small">
-    <p><span class="arrow"> </span><span><strong>3</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+    <p><span class="arrow"> </span><span><strong>163</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
   </div>
-  <p class="collapsible-content" style="display: none;">1 (opc7), 2 (opc6), 3 (opc1)</p>
+  <p class="collapsible-content" style="display: none;">257 (hoc270), 164 (opc48), 2 (hoc26), 241 (hoc243), 3 (hoc27), 4 (hoc28), 130 (hoc138), 5 (hoc29), 131 (hoc140), 6 (hoc30), 133 (hoc146), 248 (hoc250), 232 (hoc234), 214 (hoc196), 7 (hoc31), 8 (hoc32), 9 (hoc33), 10 (hoc34), 165 (opc7), 156 (opc62), 157 (opc63), 12 (hoc4), 11 (hoc38), 13 (hoc6), 166 (opc51), 167 (opc52), 14 (hoc7), 16 (hoc9), 15 (hoc8), 168 (opc53), 17 (hoc10), 18 (hoc11), 143 (hoc159), 19 (hoc18), 20 (hoc19), 21 (hoc20), 109 (hoc88), 233 (hoc235), 110 (hoc89), 111 (hoc90), 112 (hoc105), 118 (hoc126), 113 (hoc106), 117 (hoc125), 114 (hoc122), 115 (hoc123), 116 (hoc124), 119 (hoc127), 120 (hoc128), 216 (hoc188), 121 (hoc129), 122 (hoc130), 123 (hoc131), 206 (hoc183), 154 (hoc177), 124 (hoc132), 125 (hoc133), 126 (hoc134), 127 (hoc135), 128 (hoc136), 129 (hoc137), 147 (hoc172), 215 (hoc187), 22 (hoc21), 23 (hoc12), 134 (hoc148), 137 (hoc153), 207 (hoc184), 224 (hoc220), 24 (hoc13), 25 (hoc14), 260 (hoc273), 261 (hoc274), 135 (hoc149), 136 (hoc150), 225 (hoc221), 213 (hoc195), 26 (hoc15), 218 (hoc213), 262 (hoc275), 219 (hoc214), 252 (hoc265), 149 (hoc170), 220 (hoc215), 250 (hoc252), 34 (hoc36), 264 (hoc277), 35 (hoc37), 265 (hoc278), 33 (hoc35), 249 (hoc251), 251 (hoc253), 266 (hoc279), 31 (hoc23), 32 (hoc24), 36 (hoc40), 237 (hoc239), 37 (hoc42), 210 (hoc192), 238 (hoc240), 239 (hoc241), 240 (hoc242), 267 (hoc280), 38 (hoc43), 268 (hoc281), 39 (hoc44), 169 (opc54), 40 (hoc45), 226 (hoc222), 227 (hoc224), 228 (hoc225), 41 (hoc46), 170 (opc14), 171 (opc15), 42 (hoc47), 43 (hoc48), 172 (opc33), 44 (hoc50), 45 (hoc51), 148 (hoc164), 46 (hoc52), 51 (hoc57), 56 (hoc62), 1 (hoc1), 61 (hoc67), 47 (hoc53), 52 (hoc58), 57 (hoc63), 48 (hoc54), 53 (hoc59), 58 (hoc64), 49 (hoc55), 54 (hoc60), 59 (hoc65), 50 (hoc56), 55 (hoc61), 60 (hoc66), 62 (hoc68), 269 (hoc282), 63 (hoc70), 64 (hoc71), 155 (hoc179), 208 (hoc190), 209 (hoc191), 65 (hoc72), 235 (hoc237), 142 (hoc158), 66 (hoc73), 67 (hoc74), 68 (hoc75), 138 (hoc154), 69 (hoc76), 70 (hoc77), 140 (hoc156), 71 (hoc78), 72 (hoc79), 141 (hoc157), 73 (hoc80), 144 (hoc160), 74 (hoc81), 150 (hoc173), 75 (hoc82), 173 (opc47)</p>
 </div></div>
     </div>
   </div>
@@ -277,13 +280,38 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Star Check" id="card-9"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
       <div class="secondary-info">
       <!-- This is where secondary info goes -->
-      <p><strong class="red">3 amendments have incorrect stars:</strong>  1 has ☆ (No Star expected), 2 has ☆ (No Star expected), 3 has ☆ (No Star expected)</p></div>
+      <p>All amendments have correct stars</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>163</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">257 (No Star), 164 (No Star), 2 (No Star), 241 (No Star), 3 (No Star), 4 (No Star), 130 (No Star), 5 (No Star), 131 (No Star), 6 (No Star), 133 (No Star), 248 (No Star), 232 (No Star), 214 (No Star), 7 (No Star), 8 (No Star), 9 (No Star), 10 (No Star), 165 (No Star), 156 (No Star), 157 (No Star), 12 (No Star), 11 (No Star), 13 (No Star), 166 (No Star), 167 (No Star), 14 (No Star), 16 (No Star), 15 (No Star), 168 (No Star), 17 (No Star), 18 (No Star), 143 (No Star), 19 (No Star), 20 (No Star), 21 (No Star), 109 (No Star), 233 (No Star), 110 (No Star), 111 (No Star), 112 (No Star), 118 (No Star), 113 (No Star), 117 (No Star), 114 (No Star), 115 (No Star), 116 (No Star), 119 (No Star), 120 (No Star), 216 (No Star), 121 (No Star), 122 (No Star), 123 (No Star), 206 (No Star), 154 (No Star), 124 (No Star), 125 (No Star), 126 (No Star), 127 (No Star), 128 (No Star), 129 (No Star), 147 (No Star), 215 (No Star), 22 (No Star), 23 (No Star), 134 (No Star), 137 (No Star), 207 (No Star), 224 (No Star), 24 (No Star), 25 (No Star), 260 (No Star), 261 (No Star), 135 (No Star), 136 (No Star), 225 (No Star), 213 (No Star), 26 (No Star), 218 (No Star), 262 (No Star), 219 (No Star), 252 (No Star), 149 (No Star), 220 (No Star), 250 (No Star), 34 (No Star), 264 (No Star), 35 (No Star), 265 (No Star), 33 (No Star), 249 (No Star), 251 (No Star), 266 (No Star), 31 (No Star), 32 (No Star), 36 (No Star), 237 (No Star), 37 (No Star), 210 (No Star), 238 (No Star), 239 (No Star), 240 (No Star), 267 (No Star), 38 (No Star), 268 (No Star), 39 (No Star), 169 (No Star), 40 (No Star), 226 (No Star), 227 (No Star), 228 (No Star), 41 (No Star), 170 (No Star), 171 (No Star), 42 (No Star), 43 (No Star), 172 (No Star), 44 (No Star), 45 (No Star), 148 (No Star), 46 (No Star), 51 (No Star), 56 (No Star), 1 (No Star), 61 (No Star), 47 (No Star), 52 (No Star), 57 (No Star), 48 (No Star), 53 (No Star), 58 (No Star), 49 (No Star), 54 (No Star), 59 (No Star), 50 (No Star), 55 (No Star), 60 (No Star), 62 (No Star), 269 (No Star), 63 (No Star), 64 (No Star), 155 (No Star), 208 (No Star), 209 (No Star), 65 (No Star), 235 (No Star), 142 (No Star), 66 (No Star), 67 (No Star), 68 (No Star), 138 (No Star), 69 (No Star), 70 (No Star), 140 (No Star), 71 (No Star), 72 (No Star), 141 (No Star), 73 (No Star), 144 (No Star), 74 (No Star), 150 (No Star), 75 (No Star), 173 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-10"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives. Some whitespace differences are ignored.</p>
+<p>Amendments in the API match those in the XML 😀</p></div>
     </div>
     <div class="info">
       <div class="info-inner">
@@ -296,18 +324,23 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Changed amendments" id="card-4"><span class="arrow"> </span>Changed amendments<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Decision Check" id="card-11"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
       <div class="secondary-info">
       <!-- This is where secondary info goes -->
-      <p>Amendments in the API match those in the XML 😀</p></div>
+      <div><p class="small"><strong>Note:</strong> For unknown reasons, decisions recorded in a the proceedings paper do not map onto the decisions in the API (and by extension, the amendments section of bills.parliament.uk). For the purposes of this check the following groups of decisions are considered to be the same:</p><ul class="small"><li>Agreed, Agreed To, Added, Agreed to on division</li><li>Withdrawn, Withdrawn Before Moved, Withdrawn After Debate</li><li>No Decision, Not Called</li><li>Negatived, Negatived on division, Disagreed</li></ul><p>Every decision (on all amendments) in the API matches the decision in the XML. 😀</p></div></div>
     </div>
     <div class="info">
       <div class="info-inner">
         <!-- Tertiary info -->
-      </div>
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>163</strong> amendments in the API have decisions which match the decision in the provided XML file: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">257, 164, 2, 241, 3, 4, 130, 5, 131, 6, 133, 248, 232, 214, 7, 8, 9, 10, 165, 156, 157, 12, 11, 13, 166, 167, 14, 16, 15, 168, 17, 18, 143, 19, 20, 21, 109, 233, 110, 111, 112, 118, 113, 117, 114, 115, 116, 119, 120, 216, 121, 122, 123, 206, 154, 124, 125, 126, 127, 128, 129, 147, 215, 22, 23, 134, 137, 207, 224, 24, 25, 260, 261, 135, 136, 225, 213, 26, 218, 262, 219, 252, 149, 220, 250, 34, 264, 35, 265, 33, 249, 251, 266, 31, 32, 36, 237, 37, 210, 238, 239, 240, 267, 38, 268, 39, 169, 40, 226, 227, 228, 41, 170, 171, 42, 43, 172, 44, 45, 148, 46, 51, 56, 1, 61, 47, 52, 57, 48, 53, 58, 49, 54, 59, 50, 55, 60, 62, 269, 63, 64, 155, 208, 209, 65, 235, 142, 66, 67, 68, 138, 69, 70, 140, 71, 72, 141, 73, 144, 74, 150, 75, 173</p>
+</div></div>
     </div>
   </div>
 </div>
@@ -315,26 +348,7 @@
 <section class="card">
 <div class="card-inner collapsible">
   <div class="collapsible-header">
-    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
-  </div>
-  <div class="collapsible-content">
-    <div class="content">
-      <div class="secondary-info">
-      <!-- This is where secondary info goes -->
-      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
-    </div>
-    <div class="info">
-      <div class="info-inner">
-        <!-- Tertiary info -->
-      </div>
-    </div>
-  </div>
-</div>
-</section>
-<section class="card">
-<div class="card-inner collapsible">
-  <div class="collapsible-header">
-    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+    <h2 data-heading-label="Explanatory Statements" id="card-12"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
   </div>
   <div class="collapsible-content">
     <div class="content">
