@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Finance (No. 2) Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Finance (No. 2) Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Finance (No. 2) Bill</td></tr><tr><td>Published date</td><td>Monday 09 March 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table><ul class="metadata-list"><li>LawMaker Project: Finance (No. 2) Bill</li><li>LawMaker Stage: Report Stage</li><li>Matched stage on parliament website (via bills API): <a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments" target="_blank">Report stage</a></li><li>Official List: Finance (No. 2) Bill (hcmarsh) published on 2026-03-06 18:05</li><li>Report Generated: Mon 9 March 2026 10:54</li></ul></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments available via the API. This means that they  are also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>0</strong>  are only on the website.<small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">
+  <span>Amendments in the XML but not on the website: <br>Amendments on the website but not in the XML: <br>Amendments which appear in both: 14, 43, NC13, 57, 99, NC4, 30, 96, 63, 58, 84, NC16, 54, 52, 16, 76, 51, 125, 113, NC1, 65, 121, 130, 94, 11, 136, 20, 37, NC18, 46, 22, 117, 131, 79, 69, NC6, NC12, 12, 17, 35, 124, 114, 112, 48, 123, NC17, 103, 60, 138, 102, 122, 2, 100, 91, 32, 93, 95, 135, 109, 40, 5, NC19, NC10, 7, 104, NC11, 41, 21, 36, 105, 97, 1, 89, NC3, 67, 90, 85, 6, 111, 108, 92, 59, 31, 74, 26, 8, 115, NC8, 72, 119, 15, 98, 139, 42, 61, NC2, 9, 56, NC9, 47, NC7, 82, 10, 101, 137, NC14, 39, 83, 134, 33, 126, 13, 18, 66, 34, 87, 38, 24, 75, 49, 45, 116, 133, 78, NC20, 106, 81, 107, 73, 68, NC5, 62, 129, 88, 64, 70, 120, 77, 19, 86, 28, 128, 80, 127, 25, 23, 110, 27, NC15, 44, 132, 118, 71, 55, 3, 50, 29, 4, 53<small><br><br><strong>Note:</strong> The website is checked via the API.</small></span></p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Zero</strong> amendments have name changes.</p><section class="collapsible closed"><div class="collapsible-header"><h3 class="h4"><span class="arrow"> </span>Name Changes in Context <small class="text-muted"> [show]</small></h3><p>Expand this section to see the same names as above but in context.</p></div><div class="collapsible-content" style="display: none;" id="name-changes-in-context"><p><strong>58</strong> amendments have different names in the API: </p>
+<div><p class="h5 mt-4">NC5:</p>
+
+    <table class="diff" id="difflib_chg_to0__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__0"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="from0_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="to0_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC6:</p>
+
+    <table class="diff" id="difflib_chg_to1__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to1__0"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="from1_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="to1_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC7:</p>
+
+    <table class="diff" id="difflib_chg_to2__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__0"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="from2_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="to2_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">12:</p>
+
+    <table class="diff" id="difflib_chg_to4__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to4__0"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="from4_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="to4_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">13:</p>
+
+    <table class="diff" id="difflib_chg_to5__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to5__0"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="from5_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="to5_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">14:</p>
+
+    <table class="diff" id="difflib_chg_to6__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to6__0"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="from6_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="to6_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">15:</p>
+
+    <table class="diff" id="difflib_chg_to7__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to7__0"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="from7_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="to7_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">16:</p>
+
+    <table class="diff" id="difflib_chg_to8__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to8__0"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="from8_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="to8_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">17:</p>
+
+    <table class="diff" id="difflib_chg_to9__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to9__0"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="from9_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="to9_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">18:</p>
+
+    <table class="diff" id="difflib_chg_to10__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to10__0"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="from10_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="to10_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">19:</p>
+
+    <table class="diff" id="difflib_chg_to11__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to11__0"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="from11_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="to11_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">20:</p>
+
+    <table class="diff" id="difflib_chg_to12__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to12__0"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="from12_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="to12_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">21:</p>
+
+    <table class="diff" id="difflib_chg_to13__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to13__0"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="from13_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="to13_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">22:</p>
+
+    <table class="diff" id="difflib_chg_to14__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to14__0"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="from14_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="to14_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">23:</p>
+
+    <table class="diff" id="difflib_chg_to15__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to15__0"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header" id="from15_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header" id="to15_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">24:</p>
+
+    <table class="diff" id="difflib_chg_to16__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to16__0"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="from16_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="to16_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">25:</p>
+
+    <table class="diff" id="difflib_chg_to17__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to17__0"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header" id="from17_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header" id="to17_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">26:</p>
+
+    <table class="diff" id="difflib_chg_to18__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to18__0"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header" id="from18_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header" id="to18_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">27:</p>
+
+    <table class="diff" id="difflib_chg_to19__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to19__0"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="from19_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="to19_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">28:</p>
+
+    <table class="diff" id="difflib_chg_to20__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to20__0"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header" id="from20_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header" id="to20_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">29:</p>
+
+    <table class="diff" id="difflib_chg_to21__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to21__0"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="from21_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="to21_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">30:</p>
+
+    <table class="diff" id="difflib_chg_to22__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to22__0"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="from22_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="to22_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">31:</p>
+
+    <table class="diff" id="difflib_chg_to23__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to23__0"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="from23_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="to23_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">32:</p>
+
+    <table class="diff" id="difflib_chg_to24__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to24__0"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="from24_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="to24_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">33:</p>
+
+    <table class="diff" id="difflib_chg_to25__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to25__0"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="from25_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="to25_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">34:</p>
+
+    <table class="diff" id="difflib_chg_to26__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to26__0"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header" id="from26_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header" id="to26_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">35:</p>
+
+    <table class="diff" id="difflib_chg_to27__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to27__0"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header" id="from27_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header" id="to27_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">36:</p>
+
+    <table class="diff" id="difflib_chg_to28__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to28__0"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header" id="from28_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header" id="to28_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">37:</p>
+
+    <table class="diff" id="difflib_chg_to29__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to29__0"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header" id="from29_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header" id="to29_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">38:</p>
+
+    <table class="diff" id="difflib_chg_to30__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to30__0"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header" id="from30_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header" id="to30_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">39:</p>
+
+    <table class="diff" id="difflib_chg_to31__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to31__0"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header" id="from31_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header" id="to31_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">40:</p>
+
+    <table class="diff" id="difflib_chg_to32__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to32__0"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="from32_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="to32_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">41:</p>
+
+    <table class="diff" id="difflib_chg_to33__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to33__0"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header" id="from33_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header" id="to33_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">42:</p>
+
+    <table class="diff" id="difflib_chg_to34__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to34__0"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header" id="from34_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header" id="to34_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">43:</p>
+
+    <table class="diff" id="difflib_chg_to35__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to35__0"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="from35_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="to35_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">44:</p>
+
+    <table class="diff" id="difflib_chg_to36__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to36__0"><a href="#difflib_chg_to36__top">t</a></td><td class="diff_header" id="from36_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to36__top">t</a></td><td class="diff_header" id="to36_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">45:</p>
+
+    <table class="diff" id="difflib_chg_to37__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to37__0"><a href="#difflib_chg_to37__top">t</a></td><td class="diff_header" id="from37_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to37__top">t</a></td><td class="diff_header" id="to37_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">46:</p>
+
+    <table class="diff" id="difflib_chg_to39__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to39__0"><a href="#difflib_chg_to39__top">t</a></td><td class="diff_header" id="from39_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to39__top">t</a></td><td class="diff_header" id="to39_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">47:</p>
+
+    <table class="diff" id="difflib_chg_to40__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to40__0"><a href="#difflib_chg_to40__top">t</a></td><td class="diff_header" id="from40_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to40__top">t</a></td><td class="diff_header" id="to40_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">48:</p>
+
+    <table class="diff" id="difflib_chg_to41__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to41__0"><a href="#difflib_chg_to41__top">t</a></td><td class="diff_header" id="from41_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to41__top">t</a></td><td class="diff_header" id="to41_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">49:</p>
+
+    <table class="diff" id="difflib_chg_to42__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to42__0"><a href="#difflib_chg_to42__top">t</a></td><td class="diff_header" id="from42_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to42__top">t</a></td><td class="diff_header" id="to42_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">50:</p>
+
+    <table class="diff" id="difflib_chg_to43__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to43__0"><a href="#difflib_chg_to43__top">t</a></td><td class="diff_header" id="from43_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to43__top">t</a></td><td class="diff_header" id="to43_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">51:</p>
+
+    <table class="diff" id="difflib_chg_to44__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to44__0"><a href="#difflib_chg_to44__top">t</a></td><td class="diff_header" id="from44_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to44__top">t</a></td><td class="diff_header" id="to44_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">52:</p>
+
+    <table class="diff" id="difflib_chg_to45__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to45__0"><a href="#difflib_chg_to45__top">t</a></td><td class="diff_header" id="from45_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to45__top">t</a></td><td class="diff_header" id="to45_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">53:</p>
+
+    <table class="diff" id="difflib_chg_to46__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to46__0"><a href="#difflib_chg_to46__top">t</a></td><td class="diff_header" id="from46_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to46__top">t</a></td><td class="diff_header" id="to46_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">56:</p>
+
+    <table class="diff" id="difflib_chg_to47__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to47__0"><a href="#difflib_chg_to47__top">t</a></td><td class="diff_header" id="from47_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to47__top">t</a></td><td class="diff_header" id="to47_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">57:</p>
+
+    <table class="diff" id="difflib_chg_to48__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to48__0"><a href="#difflib_chg_to48__top">t</a></td><td class="diff_header" id="from48_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to48__top">t</a></td><td class="diff_header" id="to48_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">58:</p>
+
+    <table class="diff" id="difflib_chg_to50__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to50__0"><a href="#difflib_chg_to50__top">t</a></td><td class="diff_header" id="from50_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to50__top">t</a></td><td class="diff_header" id="to50_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">59:</p>
+
+    <table class="diff" id="difflib_chg_to51__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to51__0"><a href="#difflib_chg_to51__top">t</a></td><td class="diff_header" id="from51_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to51__top">t</a></td><td class="diff_header" id="to51_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">60:</p>
+
+    <table class="diff" id="difflib_chg_to52__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to52__0"><a href="#difflib_chg_to52__top">t</a></td><td class="diff_header" id="from52_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to52__top">t</a></td><td class="diff_header" id="to52_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">61:</p>
+
+    <table class="diff" id="difflib_chg_to53__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to53__0"><a href="#difflib_chg_to53__top">t</a></td><td class="diff_header" id="from53_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to53__top">t</a></td><td class="diff_header" id="to53_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">54:</p>
+
+    <table class="diff" id="difflib_chg_to54__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to54__0"><a href="#difflib_chg_to54__top">t</a></td><td class="diff_header" id="from54_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to54__top">t</a></td><td class="diff_header" id="to54_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">55:</p>
+
+    <table class="diff" id="difflib_chg_to55__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to55__0"><a href="#difflib_chg_to55__top">t</a></td><td class="diff_header" id="from55_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to55__top">t</a></td><td class="diff_header" id="to55_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">62:</p>
+
+    <table class="diff" id="difflib_chg_to57__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to57__0"><a href="#difflib_chg_to57__top">t</a></td><td class="diff_header" id="from57_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to57__top">t</a></td><td class="diff_header" id="to57_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">63:</p>
+
+    <table class="diff" id="difflib_chg_to58__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to58__0"><a href="#difflib_chg_to58__top">t</a></td><td class="diff_header" id="from58_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to58__top">t</a></td><td class="diff_header" id="to58_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">64:</p>
+
+    <table class="diff" id="difflib_chg_to59__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to59__0"><a href="#difflib_chg_to59__top">t</a></td><td class="diff_header" id="from59_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to59__top">t</a></td><td class="diff_header" id="to59_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">65:</p>
+
+    <table class="diff" id="difflib_chg_to62__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to62__0"><a href="#difflib_chg_to62__top">t</a></td><td class="diff_header" id="from62_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to62__top">t</a></td><td class="diff_header" id="to62_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">66:</p>
+
+    <table class="diff" id="difflib_chg_to63__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to63__0"><a href="#difflib_chg_to63__top">t</a></td><td class="diff_header" id="from63_1">1</td><td><span class="diff_sub">The Chancellor of the Exchequer</span></td><td class="diff_next"><a href="#difflib_chg_to63__top">t</a></td><td class="diff_header" id="to63_1">1</td><td><span class="diff_add">Rachel Reeves</span></td></tr>
+        </tbody>
+    </table>
+</div></div></section></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>159</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC5 (opc99), NC6 (opc100), NC7 (opc59), NC1 (hoc146), NC2 (hoc147), NC3 (hoc148), NC4 (hoc151), NC8 (hoc152), NC9 (hoc153), NC10 (hoc183), NC11 (hoc197), NC12 (hoc199), NC13 (hoc231), NC14 (hoc232), NC15 (hoc233), NC16 (hoc234), NC17 (hoc235), NC18 (hoc236), NC19 (hoc237), NC20 (hoc239), 1 (hoc137), 2 (hoc138), 3 (hoc139), 4 (hoc140), 5 (hoc141), 112 (hoc203), 113 (hoc204), 114 (hoc205), 115 (hoc206), 116 (hoc207), 117 (hoc208), 118 (hoc209), 119 (hoc210), 120 (hoc211), 121 (hoc212), 122 (hoc213), 123 (hoc214), 124 (hoc215), 125 (hoc216), 126 (hoc217), 127 (hoc218), 128 (hoc219), 129 (hoc220), 130 (hoc221), 131 (hoc222), 132 (hoc223), 133 (hoc224), 134 (hoc225), 135 (hoc226), 136 (hoc227), 137 (hoc228), 138 (hoc229), 139 (hoc230), 12 (opc94), 13 (opc90), 14 (opc105), 6 (hoc142), 7 (hoc143), 15 (opc93), 16 (opc72), 17 (opc73), 18 (opc117), 19 (opc103), 20 (opc118), 21 (opc85), 22 (opc86), 23 (opc96), 24 (opc91), 25 (opc87), 26 (opc95), 27 (opc102), 28 (opc126), 29 (opc127), 30 (opc128), 31 (opc120), 32 (opc116), 33 (opc119), 34 (opc123), 35 (opc140), 36 (opc142), 37 (opc101), 38 (opc78), 39 (opc79), 40 (opc131), 41 (opc137), 42 (opc80), 43 (opc121), 44 (opc81), 45 (opc64), 46 (opc125), 47 (opc122), 9 (hoc145), 10 (hoc149), 11 (hoc150), 101 (hoc190), 48 (opc75), 49 (opc84), 50 (opc83), 51 (opc76), 52 (opc138), 53 (opc106), 56 (opc110), 57 (opc111), 58 (opc112), 59 (opc113), 60 (opc114), 61 (opc115), 8 (hoc144), 109 (hoc200), 110 (hoc201), 111 (hoc202), 89 (hoc177), 102 (hoc191), 90 (hoc178), 103 (hoc192), 91 (hoc179), 104 (hoc193), 67 (hoc155), 95 (hoc184), 68 (hoc156), 96 (hoc185), 92 (hoc180), 105 (hoc194), 93 (hoc181), 106 (hoc195), 94 (hoc182), 107 (hoc196), 69 (hoc158), 97 (hoc186), 108 (hoc198), 54 (opc132), 55 (opc134), 62 (opc133), 63 (opc135), 64 (opc107), 88 (hoc157), 70 (hoc159), 71 (hoc160), 98 (hoc187), 65 (opc108), 66 (opc136), 72 (hoc161), 73 (hoc162), 99 (hoc188), 74 (hoc163), 100 (hoc189), 75 (hoc164), 76 (hoc165), 77 (hoc166), 78 (hoc167), 79 (hoc168), 80 (hoc169), 81 (hoc170), 82 (hoc171), 83 (hoc172), 84 (hoc173), 85 (hoc174), 86 (hoc175), 87 (hoc176)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All amendments have correct stars</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>159</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC5 (No Star), NC6 (No Star), NC7 (No Star), NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC8 (No Star), NC9 (No Star), NC10 (No Star), NC11 (★), NC12 (★), NC13 (★), NC14 (★), NC15 (★), NC16 (★), NC17 (★), NC18 (★), NC19 (★), NC20 (★), 1 (No Star), 2 (No Star), 3 (No Star), 4 (No Star), 5 (No Star), 112 (★), 113 (★), 114 (★), 115 (★), 116 (★), 117 (★), 118 (★), 119 (★), 120 (★), 121 (★), 122 (★), 123 (★), 124 (★), 125 (★), 126 (★), 127 (★), 128 (★), 129 (★), 130 (★), 131 (★), 132 (★), 133 (★), 134 (★), 135 (★), 136 (★), 137 (★), 138 (★), 139 (★), 12 (No Star), 13 (No Star), 14 (No Star), 6 (No Star), 7 (No Star), 15 (No Star), 16 (No Star), 17 (No Star), 18 (No Star), 19 (No Star), 20 (No Star), 21 (No Star), 22 (No Star), 23 (No Star), 24 (No Star), 25 (No Star), 26 (No Star), 27 (No Star), 28 (No Star), 29 (No Star), 30 (No Star), 31 (No Star), 32 (No Star), 33 (No Star), 34 (No Star), 35 (No Star), 36 (No Star), 37 (No Star), 38 (No Star), 39 (No Star), 40 (No Star), 41 (No Star), 42 (No Star), 43 (No Star), 44 (No Star), 45 (No Star), 46 (No Star), 47 (No Star), 9 (No Star), 10 (No Star), 11 (No Star), 101 (No Star), 48 (No Star), 49 (No Star), 50 (No Star), 51 (No Star), 52 (No Star), 53 (No Star), 56 (No Star), 57 (No Star), 58 (No Star), 59 (No Star), 60 (No Star), 61 (No Star), 8 (No Star), 109 (★), 110 (★), 111 (★), 89 (No Star), 102 (☆), 90 (No Star), 103 (☆), 91 (No Star), 104 (☆), 67 (No Star), 95 (No Star), 68 (No Star), 96 (No Star), 92 (No Star), 105 (☆), 93 (No Star), 106 (☆), 94 (No Star), 107 (☆), 69 (No Star), 97 (No Star), 108 (★), 54 (No Star), 55 (No Star), 62 (No Star), 63 (No Star), 64 (No Star), 88 (No Star), 70 (No Star), 71 (No Star), 98 (No Star), 65 (No Star), 66 (No Star), 72 (No Star), 73 (No Star), 99 (No Star), 74 (No Star), 100 (No Star), 75 (No Star), 76 (No Star), 77 (No Star), 78 (No Star), 79 (No Star), 80 (No Star), 81 (No Star), 82 (No Star), 83 (No Star), 84 (No Star), 85 (No Star), 86 (No Star), 87 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-4"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives and some whitespace differences are ignored.</p>
+<p><strong class="red">6</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033834" target="_blank">NC7</a>:</p>
+
+    <table class="diff" id="difflib_chg_to3__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to3__0"></td><td class="diff_header" id="from3_7">7</td><td>; (b) in paragraph (d), at the end insert</td><td class="diff_next"></td><td class="diff_header" id="to3_7">7</td><td>; (b) in paragraph (d), at the end insert</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_8">8</td><td>“(including any provision that could be made under paragraph 133)”</td><td class="diff_next"></td><td class="diff_header" id="to3_8">8</td><td>“(including any provision that could be made under paragraph 133)”</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to3__1">n</a></td><td class="diff_header"></td><td></td><td class="diff_next"><a href="#difflib_chg_to3__1">n</a></td><td class="diff_header" id="to3_9">9</td><td><span class="diff_add">.</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_9">9</td><td><span class="diff_sub">.</span>(3) In sub-paragraph (3) omit “that increase any person’s liability to tax”</td><td class="diff_next"></td><td class="diff_header" id="to3_10">10</td><td>(3) In sub-paragraph (3) omit “that increase any person’s liability to tax”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_10">10</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to3_11">11</td><td>.</td></tr>
+            <tr><td class="diff_next" id="difflib_chg_to3__1"></td><td class="diff_header" id="from3_11">11</td><td>(4) In sub-paragraph (4), for</td><td class="diff_next"></td><td class="diff_header" id="to3_12">12</td><td>(4) In sub-paragraph (4), for</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_12">12</td><td>“5 April”</td><td class="diff_next"></td><td class="diff_header" id="to3_13">13</td><td>“5 April”</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="from3_13">13</td><td><span class="diff_sub">substitute“30 June”</span></td><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="to3_14">14</td><td><span class="diff_add">substitute</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header"></td><td></td><td class="diff_next"></td><td class="diff_header" id="to3_15">15</td><td><span class="diff_add">“30 June”</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_14">14</td><td>.”</td><td class="diff_next"></td><td class="diff_header" id="to3_16">16</td><td>.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033838" target="_blank">45</a>:</p>
+
+    <table class="diff" id="difflib_chg_to38__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to38__0"></td><td class="diff_header" id="from38_13">13</td><td>If the result is a negative amount, the IHT-adjusted amount of the lump sum death benefit is nil.</td><td class="diff_next"></td><td class="diff_header" id="to38_13">13</td><td>If the result is a negative amount, the IHT-adjusted amount of the lump sum death benefit is nil.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_14">14</td><td>(7) Where more than one lump sum death benefit is paid to the person under the scheme, the amount to be deducted under Step 3 is the following proportion of the amount of inheritance tax identified in that Step—</td><td class="diff_next"></td><td class="diff_header" id="to38_14">14</td><td>(7) Where more than one lump sum death benefit is paid to the person under the scheme, the amount to be deducted under Step 3 is the following proportion of the amount of inheritance tax identified in that Step—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to38__top">t</a></td><td class="diff_header"></td><td></td><td class="diff_next"><a href="#difflib_chg_to38__top">t</a></td><td class="diff_header" id="to38_15">15</td><td><span class="diff_add">C/D</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_15">15</td><td><span class="diff_sub">C/D</span>where—</td><td class="diff_next"></td><td class="diff_header" id="to38_16">16</td><td>where—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_16">16</td><td>“C”</td><td class="diff_next"></td><td class="diff_header" id="to38_17">17</td><td>“C”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from38_17">17</td><td>is the amount resulting from Step 2; “D”</td><td class="diff_next"></td><td class="diff_header" id="to38_18">18</td><td>is the amount resulting from Step 2; “D”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033798" target="_blank">57</a>:</p>
+
+    <table class="diff" id="difflib_chg_to49__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to49__0"><a href="#difflib_chg_to49__0">f</a></td><td class="diff_header" id="from49_1">1</td><td>Schedule 11, page 400, line 32, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to49__0">f</a></td><td class="diff_header" id="to49_1">1</td><td>Schedule 11, page 400, line 32, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to49__top">t</a></td><td class="diff_header" id="from49_2">2</td><td><span class="diff_sub">“</span>(3) Section 993 of ITA 2007 (meaning of “connected”</td><td class="diff_next"><a href="#difflib_chg_to49__top">t</a></td><td class="diff_header" id="to49_2">2</td><td>(3) Section 993 of ITA 2007 (meaning of “connected”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from49_3">3</td><td>) applies for the purposes of this paragraph but as if—</td><td class="diff_next"></td><td class="diff_header" id="to49_3">3</td><td>) applies for the purposes of this paragraph but as if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from49_4">4</td><td>(a) subsection (4) of that section were omitted, and</td><td class="diff_next"></td><td class="diff_header" id="to49_4">4</td><td>(a) subsection (4) of that section were omitted, and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033819" target="_blank">55</a>:</p>
+
+    <table class="diff" id="difflib_chg_to56__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to56__0"></td><td class="diff_header" id="from56_4">4</td><td>to the end become sub-paragraph (i), and</td><td class="diff_next"></td><td class="diff_header" id="to56_4">4</td><td>to the end become sub-paragraph (i), and</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from56_5">5</td><td>(ii) after that sub-paragraph insert</td><td class="diff_next"></td><td class="diff_header" id="to56_5">5</td><td>(ii) after that sub-paragraph insert</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to56__top">t</a></td><td class="diff_header"></td><td></td><td class="diff_next"><a href="#difflib_chg_to56__top">t</a></td><td class="diff_header" id="to56_6">6</td><td><span class="diff_add">“, and</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from56_6">6</td><td><span class="diff_sub">“, and</span>(ii) which (either by themselves or together with any unquoted shares in, or other unquoted securities of, the company that are owned by the transferor) gave the transferor control of the company immediately before the transfer;””</td><td class="diff_next"></td><td class="diff_header" id="to56_7">7</td><td>(ii) which (either by themselves or together with any unquoted shares in, or other unquoted securities of, the company that are owned by the transferor) gave the transferor control of the company immediately before the transfer;””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033799" target="_blank">64</a>:</p>
+
+    <table class="diff" id="difflib_chg_to60__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to60__0"><a href="#difflib_chg_to60__0">f</a></td><td class="diff_header" id="from60_1">1</td><td>Schedule 12, page 457, line 36, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to60__0">f</a></td><td class="diff_header" id="to60_1">1</td><td>Schedule 12, page 457, line 36, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to60__top">t</a></td><td class="diff_header" id="from60_2">2</td><td><span class="diff_sub">“</span>(1A) In section 107, in subsection (4) for “105(1)(bb)”</td><td class="diff_next"><a href="#difflib_chg_to60__top">t</a></td><td class="diff_header" id="to60_2">2</td><td>(1A) In section 107, in subsection (4) for “105(1)(bb)”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from60_3">3</td><td>substitute “105(1)(aa) or (bb)”</td><td class="diff_next"></td><td class="diff_header" id="to60_3">3</td><td>substitute “105(1)(aa) or (bb)”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from60_4">4</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to60_4">4</td><td>.</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4042/stages/20485/amendments/10033876" target="_blank">88</a>:</p>
+
+    <table class="diff" id="difflib_chg_to61__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to61__0"><a href="#difflib_chg_to61__0">f</a></td><td class="diff_header" id="from61_1">1</td><td>Schedule 12, page 458, line 31, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to61__0">f</a></td><td class="diff_header" id="to61_1">1</td><td>Schedule 12, page 458, line 31, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to61__top">t</a></td><td class="diff_header" id="from61_2">2</td><td><span class="diff_sub">“</span>(1A) In Section 227, leave out subsection (3)(a) and insert—</td><td class="diff_next"><a href="#difflib_chg_to61__top">t</a></td><td class="diff_header" id="to61_2">2</td><td>(1A) In Section 227, leave out subsection (3)(a) and insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from61_3">3</td><td><span class="diff_sub">“</span>(a) if the chargeable transfer was made on death and to the extent that it qualified for relief under Chapters I or II of part V of this Act, eighteen months after the end of the month in which the death occurred, or</td><td class="diff_next"></td><td class="diff_header" id="to61_3">3</td><td>(a) if the chargeable transfer was made on death and to the extent that it qualified for relief under Chapters I or II of part V of this Act, eighteen months after the end of the month in which the death occurred, or</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from61_4">4</td><td>(b) if the chargeable transfer was made on death and to the extent that it did not qualify for relief under Chapters I or II of part V of this Act, six months after the end of the month in which the death occurred, and””</td><td class="diff_next"></td><td class="diff_header" id="to61_4">4</td><td>(b) if the chargeable transfer was made on death and to the extent that it did not qualify for relief under Chapters I or II of part V of this Act, six months after the end of the month in which the death occurred, and””</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>
