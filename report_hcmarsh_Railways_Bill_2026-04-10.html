@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Railways Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Railways Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Railways Bill</td></tr><tr><td>Published date</td><td>Monday 13 April 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table><ul class="metadata-list"><li>LawMaker Project: Railways Bill</li><li>LawMaker Stage: Report Stage</li><li>Matched stage on parliament website (via bills API): <a href="https://bills.parliament.uk/bills/4030/stages/20497/amendments" target="_blank">Report stage</a></li><li>Official List: Railways Bill (hcmarsh) published on 2026-04-10 16:10</li><li>Report Generated: Mon 13 April 2026 15:40</li></ul></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-13"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments available via the API. This means that they  are also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>0</strong>  are only on the website.<small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">
+  <span>Amendments in the XML but not on the website: <br>Amendments on the website but not in the XML: <br>Amendments which appear in both: 16, 15, NC38, 13, NC1, 2, 43, 69, 22, NC28, 19, 20, 39, 34, 51, 68, NC7, 46, 58, 55, 66, 3, 29, NC26, 32, NC16, 14, 52, 30, 38, 26, NC18, 27, 41, NC37, 36, NC15, 9, 17, NC35, NC24, 62, NC21, 18, 57, 23, 42, NC2, 59, 4, NC29, 5, NC14, NC13, 50, NC11, NC5, 53, 67, NC23, NC33, 65, 1, 31, 28, 45, 56, 7, NC10, 60, NC20, 6, 24, 35, 21, 25, 64, NC8, NC9, 63, 12, 70, 61, 49, NC19, 40, 71, 47, 37, NC4, 11, NC12, 10, NC32, 44, 54, NC39, NC34, NC22, NC27, NC17, 48, NC30, NC3, NC6, 33, 8, NC36, NC25, NC31<small><br><br><strong>Note:</strong> The website is checked via the API.</small></span></p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-14"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <table class="sticky-head table-responsive-md table an-table"><thead><tr><th scope="col">Ref</th><th scope="col">Names missing from API</th><th scope="col">Names in API but not in XML</th><th scope="col">Totals</th></tr></thead><tbody><tr><td>NC1 (hoc295)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC2 (hoc298)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC3 (hoc296)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC4 (hoc297)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC5 (hoc299)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC6 (hoc291)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC7 (hoc292)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC8 (hoc293)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC9 (hoc294)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC11 (hoc330)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>NC28 (hoc389)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>55 (hoc372)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span><span class="col-12 col-lg-6  mb-2">Caroline Voaden</span><span class="col-12 col-lg-6  mb-2">Ian Sollom</span><span class="col-12 col-lg-6  mb-2">Olly Glover</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 5</td></tr><tr><td>32 (hoc340)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Clive Lewis</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>44 (hoc357)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Ian Byrne</span></p></td><td><p class="row"></p></td><td>XML only: 1</td></tr><tr><td>45 (hoc358)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Carla Denyer</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Ian Byrne</span></p></td><td><p class="row"></p></td><td>XML only: 5</td></tr></tbody></table><section class="collapsible closed"><div class="collapsible-header"><h3 class="h4"><span class="arrow"> </span>Name Changes in Context <small class="text-muted"> [show]</small></h3><p>Expand this section to see the same names as above but in context.</p></div><div class="collapsible-content" style="display: none;" id="name-changes-in-context"><p><strong>15</strong> amendments have different names in the API: </p>
+<div><p class="h5 mt-4">NC1:</p>
+
+    <table class="diff" id="difflib_chg_to19__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to19__0"></td><td class="diff_header" id="from19_3">3</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to19_3">3</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_4">4</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to19_4">4</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="from19_5">5</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC2:</p>
+
+    <table class="diff" id="difflib_chg_to20__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to20__0"><a href="#difflib_chg_to20__0">f</a></td><td class="diff_header" id="from20_1">1</td><td>Olly Glover</td><td class="diff_next"><a href="#difflib_chg_to20__0">f</a></td><td class="diff_header" id="to20_1">1</td><td>Olly Glover</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_2">2</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to20_2">2</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header" id="from20_3">3</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC3:</p>
+
+    <table class="diff" id="difflib_chg_to21__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to21__0"></td><td class="diff_header" id="from21_3">3</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to21_3">3</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_4">4</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to21_4">4</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="from21_5">5</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC4:</p>
+
+    <table class="diff" id="difflib_chg_to22__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to22__0"></td><td class="diff_header" id="from22_2">2</td><td>Helen Morgan</td><td class="diff_next"></td><td class="diff_header" id="to22_2">2</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from22_3">3</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to22_3">3</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="from22_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC5:</p>
+
+    <table class="diff" id="difflib_chg_to23__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to23__0"></td><td class="diff_header" id="from23_2">2</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to23_2">2</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from23_3">3</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to23_3">3</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="from23_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC6:</p>
+
+    <table class="diff" id="difflib_chg_to24__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to24__0"></td><td class="diff_header" id="from24_2">2</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to24_2">2</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_3">3</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to24_3">3</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="from24_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC7:</p>
+
+    <table class="diff" id="difflib_chg_to25__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to25__0"></td><td class="diff_header" id="from25_2">2</td><td>Adam Dance</td><td class="diff_next"></td><td class="diff_header" id="to25_2">2</td><td>Adam Dance</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_3">3</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to25_3">3</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="from25_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC8:</p>
+
+    <table class="diff" id="difflib_chg_to26__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to26__0"><a href="#difflib_chg_to26__0">f</a></td><td class="diff_header" id="from26_1">1</td><td>Olly Glover</td><td class="diff_next"><a href="#difflib_chg_to26__0">f</a></td><td class="diff_header" id="to26_1">1</td><td>Olly Glover</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from26_2">2</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to26_2">2</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header" id="from26_3">3</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to26__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC9:</p>
+
+    <table class="diff" id="difflib_chg_to27__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to27__0"><a href="#difflib_chg_to27__0">f</a></td><td class="diff_header" id="from27_1">1</td><td>Olly Glover</td><td class="diff_next"><a href="#difflib_chg_to27__0">f</a></td><td class="diff_header" id="to27_1">1</td><td>Olly Glover</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header" id="from27_2">2</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to27__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC11:</p>
+
+    <table class="diff" id="difflib_chg_to28__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to28__0"></td><td class="diff_header" id="from28_20">20</td><td>Adrian Ramsay</td><td class="diff_next"></td><td class="diff_header" id="to28_20">20</td><td>Adrian Ramsay</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from28_21">21</td><td>Hannah Spencer</td><td class="diff_next"></td><td class="diff_header" id="to28_21">21</td><td>Hannah Spencer</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header" id="from28_22">22</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to28__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC28:</p>
+
+    <table class="diff" id="difflib_chg_to29__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to29__0"><a href="#difflib_chg_to29__0">f</a></td><td class="diff_header" id="from29_1">1</td><td>Zöe Franklin</td><td class="diff_next"><a href="#difflib_chg_to29__0">f</a></td><td class="diff_header" id="to29_1">1</td><td>Zöe Franklin</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from29_2">2</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to29_2">2</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header" id="from29_3">3</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"><a href="#difflib_chg_to29__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">55:</p>
+
+    <table class="diff" id="difflib_chg_to30__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to30__0"></td><td class="diff_header" id="from30_13">13</td><td>Mr Joshua Reynolds</td><td class="diff_next"></td><td class="diff_header" id="to30_13">13</td><td>Mr Joshua Reynolds</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_14">14</td><td>Vikki Slade</td><td class="diff_next"></td><td class="diff_header" id="to30_14">14</td><td>Vikki Slade</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header" id="from30_15">15</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"><a href="#difflib_chg_to30__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_16">16</td><td><span class="diff_sub">Caroline Voaden</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_17">17</td><td><span class="diff_sub">Ian Sollom</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_18">18</td><td><span class="diff_sub">Olly Glover</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from30_19">19</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">32:</p>
+
+    <table class="diff" id="difflib_chg_to31__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to31__0"></td><td class="diff_header" id="from31_26">26</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to31_26">26</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from31_27">27</td><td>Hannah Spencer</td><td class="diff_next"></td><td class="diff_header" id="to31_27">27</td><td>Hannah Spencer</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header" id="from31_28">28</td><td><span class="diff_sub">Clive Lewis</span></td><td class="diff_next"><a href="#difflib_chg_to31__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">44:</p>
+
+    <table class="diff" id="difflib_chg_to33__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to33__0"><a href="#difflib_chg_to33__0">f</a></td><td class="diff_header" id="from33_1">1</td><td>Neil Duncan-Jordan</td><td class="diff_next"><a href="#difflib_chg_to33__0">f</a></td><td class="diff_header" id="to33_1">1</td><td>Neil Duncan-Jordan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header" id="from33_2">2</td><td><span class="diff_sub">Ian Byrne</span></td><td class="diff_next"><a href="#difflib_chg_to33__top">t</a></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">45:</p>
+
+    <table class="diff" id="difflib_chg_to34__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to34__0"></td><td class="diff_header" id="from34_14">14</td><td>Iqbal Mohamed</td><td class="diff_next"></td><td class="diff_header" id="to34_14">14</td><td>Iqbal Mohamed</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_15">15</td><td>Grahame Morris</td><td class="diff_next"></td><td class="diff_header" id="to34_15">15</td><td>Grahame Morris</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header" id="from34_16">16</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"><a href="#difflib_chg_to34__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_17">17</td><td><span class="diff_sub">Carla Denyer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_18">18</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_19">19</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from34_20">20</td><td><span class="diff_sub">Ian Byrne</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div></div></section></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>95</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC10 (hoc309), NC12 (hoc331), NC13 (hoc332), NC14 (hoc329), NC15 (hoc346), NC16 (hoc349), NC17 (hoc360), NC18 (hoc361), NC19 (hoc362), NC20 (hoc369), NC21 (hoc376), NC22 (hoc377), NC23 (hoc378), NC24 (hoc384), NC25 (hoc385), NC26 (hoc387), NC27 (hoc388), NC29 (hoc393), NC30 (hoc394), NC31 (hoc395), NC32 (hoc396), NC33 (hoc397), NC34 (hoc398), NC35 (hoc399), NC36 (hoc402), NC37 (hoc403), NC38 (hoc404), NC39 (hoc407), 50 (hoc366), 1 (hoc300), 56 (hoc373), 64 (hoc386), 2 (hoc301), 5 (hoc303), 46 (hoc359), 28 (hoc333), 37 (hoc350), 4 (hoc304), 68 (hoc400), 65 (hoc390), 66 (hoc391), 38 (hoc351), 67 (hoc392), 29 (hoc341), 70 (hoc405), 53 (hoc370), 30 (hoc342), 35 (hoc347), 48 (hoc364), 49 (hoc365), 59 (hoc379), 36 (hoc348), 57 (hoc374), 31 (hoc343), 54 (hoc371), 10 (hoc310), 11 (hoc311), 12 (hoc312), 13 (hoc313), 14 (hoc314), 16 (hoc316), 17 (hoc317), 18 (hoc318), 19 (hoc319), 20 (hoc320), 21 (hoc321), 22 (hoc322), 23 (hoc323), 24 (hoc324), 15 (hoc315), 33 (hoc344), 71 (hoc406), 60 (hoc380), 47 (hoc363), 61 (hoc381), 39 (hoc352), 51 (hoc367), 58 (hoc375), 62 (hoc382), 52 (hoc368), 63 (hoc383), 69 (hoc401), 8 (hoc308), 9 (hoc305), 25 (hoc326), 26 (hoc327), 27 (hoc328), 41 (hoc354), 40 (hoc353), 42 (hoc355), 3 (hoc302), 7 (hoc307), 43 (hoc356), 6 (hoc306), 34 (hoc345)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-15"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">3 amendments have incorrect stars:</strong>  NC39 has ☆ (No Star expected), 70 has ☆ (No Star expected), 71 has ☆ (No Star expected)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>107</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC5 (No Star), NC6 (No Star), NC7 (No Star), NC8 (No Star), NC9 (No Star), NC10 (No Star), NC11 (No Star), NC12 (No Star), NC13 (No Star), NC14 (No Star), NC15 (No Star), NC16 (No Star), NC17 (No Star), NC18 (No Star), NC19 (No Star), NC20 (No Star), NC21 (No Star), NC22 (No Star), NC23 (No Star), NC24 (No Star), NC25 (No Star), NC26 (No Star), NC27 (No Star), NC28 (No Star), NC29 (No Star), NC30 (No Star), NC31 (No Star), NC32 (No Star), NC33 (No Star), NC34 (No Star), NC35 (No Star), NC36 (No Star), NC37 (No Star), NC38 (No Star), 50 (No Star), 1 (No Star), 56 (No Star), 64 (No Star), 2 (No Star), 5 (No Star), 46 (No Star), 28 (No Star), 37 (No Star), 4 (No Star), 55 (No Star), 68 (No Star), 65 (No Star), 66 (No Star), 38 (No Star), 67 (No Star), 29 (No Star), 53 (No Star), 30 (No Star), 35 (No Star), 48 (No Star), 49 (No Star), 59 (No Star), 36 (No Star), 57 (No Star), 31 (No Star), 54 (No Star), 10 (No Star), 11 (No Star), 12 (No Star), 32 (No Star), 13 (No Star), 14 (No Star), 16 (No Star), 17 (No Star), 18 (No Star), 19 (No Star), 20 (No Star), 21 (No Star), 22 (No Star), 23 (No Star), 24 (No Star), 15 (No Star), 33 (No Star), 60 (No Star), 47 (No Star), 61 (No Star), 39 (No Star), 51 (No Star), 58 (No Star), 62 (No Star), 52 (No Star), 63 (No Star), 69 (No Star), 8 (No Star), 9 (No Star), 25 (No Star), 26 (No Star), 27 (No Star), 41 (No Star), 40 (No Star), 42 (No Star), 44 (No Star), 45 (No Star), 3 (No Star), 7 (No Star), 43 (No Star), 6 (No Star), 34 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-16"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives and some whitespace differences are ignored.</p>
+<p><strong class="red">2</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4030/stages/20497/amendments/10033609" target="_blank">42</a>:</p>
+
+    <table class="diff" id="difflib_chg_to32__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to32__0"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="from32_1">1</td><td>Clause 81, page 49, line 4, after “must consult" insert <span class="diff_chg">“</span>the mayor of<span class="diff_chg">”</span></td><td class="diff_next"><a href="#difflib_chg_to32__top">t</a></td><td class="diff_header" id="to32_1">1</td><td>Clause 81, page 49, line 4, after “must consult" insert <span class="diff_chg">"</span>the mayor of<span class="diff_chg">"</span></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4030/stages/20497/amendments/10032952" target="_blank">3</a>:</p>
+
+    <table class="diff" id="difflib_chg_to35__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to35__0"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="from35_1">1</td><td>Clause 98, page 59, line 15, at end insert “, except that section 3(1)(d) may not be commenced until any report under section [Report on<span class="diff_sub"> </span>Great British Railways’ ticketing function] has been published.”</td><td class="diff_next"><a href="#difflib_chg_to35__top">t</a></td><td class="diff_header" id="to35_1">1</td><td>Clause 98, page 59, line 15, at end insert “, except that section 3(1)(d) may not be commenced until any report under section [Report onGreat British Railways’ ticketing function] has been published.”</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-17"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-18"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>

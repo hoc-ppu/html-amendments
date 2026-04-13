@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Representation of the People Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Representation of the People Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Representation of the People Bill</td></tr><tr><td>Published date</td><td>Monday 13 April 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table><ul class="metadata-list"><li>LawMaker Project: Representation of the People Bill</li><li>LawMaker Stage: Committee Stage</li><li>Matched stage on parliament website (via bills API): <a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments" target="_blank">Committee stage</a></li><li>Official List: Representation of the People Bill (hcmarsh) published on 2026-04-10 16:05</li><li>Report Generated: Mon 13 April 2026 15:40</li></ul></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments available via the API. This means that they  are also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>18</strong>  are only on the website.<small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">
+  <span>Amendments in the XML but not on the website: <br>Amendments on the website but not in the XML: 11, 8, 29, 30, 24, 10, NC23, 26, 22, 6, 7, 5, 9, 13, 28, NC11, 12, NC21<br>Amendments which appear in both: 46, 61, NC61, NC28, 51, 34, 19, NC54, NC46, NC2, NC43, 1, NC50, NC16, NC4, NC65, NC47, 63, 45, 3, NC36, NC12, 59, NC53, NC10, 38, 84, 92, 48, 21, NC30, 37, 90, NC49, NC44, 58, NC33, 27, NC32, NC35, 73, NC39, NC29, NC62, NC56, NC17, 39, 88, 67, NC22, NC59, NC63, NC38, 4, 55, 50, NC41, NC40, NC3, 42, NC34, 81, NC25, NC19, 47, 71, 60, 68, 20, NC48, 89, 65, 75, 36, NC14, NC57, 93, NC64, 64, 57, NC18, NC9, 14, 76, 53, NC27, NC37, NC42, 17, 80, 2, 87, 44, 85, 33, 23, 31, NC6, NC31, 78, 72, NC52, 74, 16, NC24, 91, 70, NC60, NC26, 40, NC51, 62, 79, 66, NC55, 94, 77, 32, NC45, 18, NC8, 54, NC20, 25, NC7, 86, 15, 82, 49, 56, 83, NC15, NC58, 35, 41, NC13, NC1, 52, 69, NC5, 43<small><br><br><strong>Note:</strong> The website is checked via the API.</small></span></p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Zero</strong> amendments have name changes.</p><div></div></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>141</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">14 (opc27), 15 (opc28), 16 (opc29), 17 (opc56), 18 (opc21), 39 (opc15), 40 (opc16), 41 (opc17), 32 (hoc51), 31 (hoc50), 42 (opc49), 43 (opc35), 44 (opc73), 45 (opc74), 46 (opc75), 47 (opc77), 48 (opc41), 49 (opc36), 50 (opc18), 51 (opc19), 52 (opc20), 53 (opc78), 54 (opc79), 55 (opc80), 56 (opc81), 57 (opc82), 58 (opc110), 59 (opc83), 60 (opc109), 61 (opc84), 62 (opc45), 63 (opc85), 64 (opc86), 65 (opc94), 66 (opc95), 67 (opc87), 68 (opc96), 69 (opc88), 70 (opc43), 71 (opc99), 72 (opc100), 19 (opc62), 20 (opc63), 73 (opc101), 74 (opc102), 75 (opc89), 76 (opc90), 77 (opc91), 78 (opc92), 34 (hoc63), 35 (hoc64), 36 (hoc71), 37 (hoc72), 88 (hoc82), 89 (hoc83), 79 (opc57), 90 (hoc84), 91 (hoc85), 92 (hoc86), 80 (opc104), 81 (opc105), 82 (opc50), 83 (opc52), 84 (opc51), 93 (hoc87), 94 (hoc88), 85 (opc53), 86 (opc72), 87 (opc54), 38 (hoc74), NC14 (opc4), NC60 (opc106), NC1 (hoc1), NC2 (hoc2), NC3 (hoc3), NC4 (hoc4), NC5 (hoc5), NC6 (hoc8), NC7 (hoc9), NC8 (hoc10), NC9 (hoc12), NC10 (hoc13), NC12 (hoc16), NC13 (hoc17), NC15 (hoc18), NC16 (hoc19), NC17 (hoc20), NC18 (hoc21), NC19 (hoc22), NC20 (hoc24), NC22 (hoc26), NC24 (hoc35), NC25 (hoc36), NC26 (hoc27), NC27 (hoc28), NC28 (hoc29), NC29 (hoc30), NC30 (hoc31), NC31 (hoc37), NC32 (hoc38), NC33 (hoc39), NC34 (hoc40), NC35 (hoc41), NC36 (hoc42), NC37 (hoc44), NC38 (hoc52), NC39 (hoc53), NC40 (hoc54), NC41 (hoc55), NC42 (hoc56), NC43 (hoc57), NC44 (hoc58), NC45 (hoc60), NC46 (hoc61), NC47 (hoc62), NC48 (hoc65), NC49 (hoc66), NC50 (hoc68), NC51 (hoc80), NC52 (hoc69), NC53 (hoc70), NC54 (hoc73), NC55 (hoc75), NC56 (hoc76), NC57 (hoc78), NC58 (hoc79), NC59 (hoc81), NC61 (hoc90), NC62 (hoc91), NC63 (hoc92), NC64 (hoc93), NC65 (hoc89), 1 (hoc6), 27 (hoc49), 33 (hoc59), 2 (hoc7), 25 (hoc43), 3 (hoc11), 4 (hoc14), 23 (hoc32), 21 (opc3)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">62 amendments have incorrect stars:</strong>  39 has ★ (☆ expected), 40 has ★ (☆ expected), 41 has ★ (☆ expected), 42 has ★ (☆ expected), 43 has ★ (☆ expected), 44 has ★ (☆ expected), 45 has ★ (☆ expected), 46 has ★ (☆ expected), 47 has ★ (☆ expected), 48 has ★ (☆ expected), 49 has ★ (☆ expected), 50 has ★ (☆ expected), 51 has ★ (☆ expected), 52 has ★ (☆ expected), 53 has ★ (☆ expected), 54 has ★ (☆ expected), 55 has ★ (☆ expected), 56 has ★ (☆ expected), 57 has ★ (☆ expected), 58 has ★ (☆ expected), 59 has ★ (☆ expected), 60 has ★ (☆ expected), 61 has ★ (☆ expected), 62 has ★ (☆ expected), 63 has ★ (☆ expected), 64 has ★ (☆ expected), 65 has ★ (☆ expected), 66 has ★ (☆ expected), 67 has ★ (☆ expected), 68 has ★ (☆ expected), 69 has ★ (☆ expected), 70 has ★ (☆ expected), 71 has ★ (☆ expected), 72 has ★ (☆ expected), 73 has ★ (☆ expected), 74 has ★ (☆ expected), 75 has ★ (☆ expected), 76 has ★ (☆ expected), 77 has ★ (☆ expected), 78 has ★ (☆ expected), 88 has ★ (☆ expected), 89 has ★ (☆ expected), 79 has ★ (☆ expected), 90 has ★ (☆ expected), 91 has ★ (☆ expected), 92 has ★ (☆ expected), 80 has ★ (☆ expected), 81 has ★ (☆ expected), 82 has ★ (☆ expected), 83 has ★ (☆ expected), 84 has ★ (☆ expected), 93 has ★ (☆ expected), 94 has ★ (☆ expected), 85 has ★ (☆ expected), 86 has ★ (☆ expected), 87 has ★ (☆ expected), NC60 has ★ (☆ expected), NC61 has ★ (☆ expected), NC62 has ★ (☆ expected), NC63 has ★ (☆ expected), NC64 has ★ (☆ expected), NC65 has ★ (☆ expected)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>79</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">14 (No Star), 15 (No Star), 16 (No Star), 17 (No Star), 18 (No Star), 32 (No Star), 31 (No Star), 19 (No Star), 20 (No Star), 34 (No Star), 35 (No Star), 36 (No Star), 37 (No Star), 38 (No Star), NC14 (No Star), NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC5 (No Star), NC6 (No Star), NC7 (No Star), NC8 (No Star), NC9 (No Star), NC10 (No Star), NC12 (No Star), NC13 (No Star), NC15 (No Star), NC16 (No Star), NC17 (No Star), NC18 (No Star), NC19 (No Star), NC20 (No Star), NC22 (No Star), NC24 (No Star), NC25 (No Star), NC26 (No Star), NC27 (No Star), NC28 (No Star), NC29 (No Star), NC30 (No Star), NC31 (No Star), NC32 (No Star), NC33 (No Star), NC34 (No Star), NC35 (No Star), NC36 (No Star), NC37 (No Star), NC38 (No Star), NC39 (No Star), NC40 (No Star), NC41 (No Star), NC42 (No Star), NC43 (No Star), NC44 (No Star), NC45 (No Star), NC46 (No Star), NC47 (No Star), NC48 (No Star), NC49 (No Star), NC50 (No Star), NC51 (No Star), NC52 (No Star), NC53 (No Star), NC54 (No Star), NC55 (No Star), NC56 (No Star), NC57 (No Star), NC58 (No Star), NC59 (No Star), 1 (No Star), 27 (No Star), 33 (No Star), 2 (No Star), 25 (No Star), 3 (No Star), 4 (No Star), 23 (No Star), 21 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-4"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives and some whitespace differences are ignored.</p>
+<p><strong class="red">17</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034861" target="_blank">45</a>:</p>
+
+    <table class="diff" id="difflib_chg_to0__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__0"><a href="#difflib_chg_to0__0">f</a></td><td class="diff_header" id="from0_1">1</td><td>Schedule 8, page 148, line 2, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to0__0">f</a></td><td class="diff_header" id="to0_1">1</td><td>Schedule 8, page 148, line 2, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="from0_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of sub-paragraph (1A), a donation from a person is also to be treated as a donation of an amount exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="to0_2">2</td><td>(1BA) For the purposes of sub-paragraph (1A), a donation from a person is also to be treated as a donation of an amount exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_3">3</td><td>(a) the regulated donee has previously undertaken a risk assessment in relation to a relevant controlled benefit accruing to the donee in the same calendar year (the “previous risk-assessed benefit”</td><td class="diff_next"></td><td class="diff_header" id="to0_3">3</td><td>(a) the regulated donee has previously undertaken a risk assessment in relation to a relevant controlled benefit accruing to the donee in the same calendar year (the “previous risk-assessed benefit”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to0_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034849" target="_blank">48</a>:</p>
+
+    <table class="diff" id="difflib_chg_to1__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to1__0"><a href="#difflib_chg_to1__0">f</a></td><td class="diff_header" id="from1_1">1</td><td>Schedule 8, page 148, line 16, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to1__0">f</a></td><td class="diff_header" id="to1_1">1</td><td>Schedule 8, page 148, line 16, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="from1_2">2</td><td><span class="diff_sub">“</span>(1E) But regulations made by the Secretary of State under section 54C(3) apply in relation to a donation to a member of a local authority in Scotland who is not also a member of a registered party only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers.”</td><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="to1_2">2</td><td>(1E) But regulations made by the Secretary of State under section 54C(3) apply in relation to a donation to a member of a local authority in Scotland who is not also a member of a registered party only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034845" target="_blank">51</a>:</p>
+
+    <table class="diff" id="difflib_chg_to2__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__0"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="from2_1">1</td><td>Schedule 8, page 149, line 34, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="to2_1">1</td><td>Schedule 8, page 149, line 34, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="from2_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of subsection (1A), a regulated transaction entered into with a person is also to be treated as having a value exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="to2_2">2</td><td>(1BA) For the purposes of subsection (1A), a regulated transaction entered into with a person is also to be treated as having a value exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_3">3</td><td>(a) the party has previously undertaken a risk assessment in relation to a relevant benefit accruing to the party in the same calendar year (the “previous risk-assessed benefit”</td><td class="diff_next"></td><td class="diff_header" id="to2_3">3</td><td>(a) the party has previously undertaken a risk assessment in relation to a relevant benefit accruing to the party in the same calendar year (the “previous risk-assessed benefit”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to2_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034866" target="_blank">55</a>:</p>
+
+    <table class="diff" id="difflib_chg_to3__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to3__0"><a href="#difflib_chg_to3__0">f</a></td><td class="diff_header" id="from3_1">1</td><td>Schedule 8, page 153, line 16, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to3__0">f</a></td><td class="diff_header" id="to3_1">1</td><td>Schedule 8, page 153, line 16, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="from3_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of sub-paragraph (1A), a controlled transaction entered into with a person is also to be treated as having a value exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to3__top">t</a></td><td class="diff_header" id="to3_2">2</td><td>(1BA) For the purposes of sub-paragraph (1A), a controlled transaction entered into with a person is also to be treated as having a value exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_3">3</td><td>(a) the regulated participant has previously undertaken a risk assessment in relation to a relevant controlled benefit accruing to the regulated participant in the same calendar year (the “previous risk-assessed benefit”</td><td class="diff_next"></td><td class="diff_header" id="to3_3">3</td><td>(a) the regulated participant has previously undertaken a risk assessment in relation to a relevant controlled benefit accruing to the regulated participant in the same calendar year (the “previous risk-assessed benefit”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from3_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to3_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034870" target="_blank">61</a>:</p>
+
+    <table class="diff" id="difflib_chg_to4__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to4__0"><a href="#difflib_chg_to4__0">f</a></td><td class="diff_header" id="from4_1">1</td><td>Schedule 8, page 155, line 35, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to4__0">f</a></td><td class="diff_header" id="to4_1">1</td><td>Schedule 8, page 155, line 35, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="from4_2">2</td><td><span class="diff_sub">“</span>(1CA) For the purposes of sub-paragraph (1B), a donation to a recognised third party from a person is also to be treated as a donation of an amount exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to4__top">t</a></td><td class="diff_header" id="to4_2">2</td><td>(1CA) For the purposes of sub-paragraph (1B), a donation to a recognised third party from a person is also to be treated as a donation of an amount exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_3">3</td><td>(a) the recognised third party has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in the same calendar year (the “previous risk-assessed donation”</td><td class="diff_next"></td><td class="diff_header" id="to4_3">3</td><td>(a) the recognised third party has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in the same calendar year (the “previous risk-assessed donation”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from4_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to4_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034851" target="_blank">62</a>:</p>
+
+    <table class="diff" id="difflib_chg_to5__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to5__0"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="from5_1">1</td><td>Schedule 8, page 155, line 40, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="to5_1">1</td><td>Schedule 8, page 155, line 40, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="from5_2">2</td><td><span class="diff_sub">“</span>(1E) But regulations made by the Secretary of State under section 54C(3) apply in relation to a Scottish devolved donation or a Welsh devolved donation only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers or the Welsh Ministers (as the case may be).</td><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="to5_2">2</td><td>(1E) But regulations made by the Secretary of State under section 54C(3) apply in relation to a Scottish devolved donation or a Welsh devolved donation only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers or the Welsh Ministers (as the case may be).</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from5_3">3</td><td>(1F) In sub-paragraph (1E)—</td><td class="diff_next"></td><td class="diff_header" id="to5_3">3</td><td>(1F) In sub-paragraph (1E)—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from5_4">4</td><td>“Scottish devolved donation”</td><td class="diff_next"></td><td class="diff_header" id="to5_4">4</td><td>“Scottish devolved donation”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034872" target="_blank">64</a>:</p>
+
+    <table class="diff" id="difflib_chg_to6__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to6__0"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="from6_1">1</td><td>Schedule 8, page 158, line 7, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="to6_1">1</td><td>Schedule 8, page 158, line 7, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="from6_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of sub-paragraph (1A), a donation to a permitted participant from a person in respect of a referendum is also to be treated as a donation of an amount exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="to6_2">2</td><td>(1BA) For the purposes of sub-paragraph (1A), a donation to a permitted participant from a person in respect of a referendum is also to be treated as a donation of an amount exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from6_3">3</td><td>(a) the permitted participant has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in respect of the same referendum (the “previous risk-assessed donation”</td><td class="diff_next"></td><td class="diff_header" id="to6_3">3</td><td>(a) the permitted participant has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in respect of the same referendum (the “previous risk-assessed donation”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from6_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to6_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034874" target="_blank">69</a>:</p>
+
+    <table class="diff" id="difflib_chg_to7__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to7__0"><a href="#difflib_chg_to7__0">f</a></td><td class="diff_header" id="from7_1">1</td><td>Schedule 8, page 159, line 20, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to7__0">f</a></td><td class="diff_header" id="to7_1">1</td><td>Schedule 8, page 159, line 20, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="from7_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of sub-paragraph (1A), a donation to a candidate or their election agent from a person in respect of an election is also to be treated as a donation of an amount exceeding the threshold amount if—</td><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="to7_2">2</td><td>(1BA) For the purposes of sub-paragraph (1A), a donation to a candidate or their election agent from a person in respect of an election is also to be treated as a donation of an amount exceeding the threshold amount if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_3">3</td><td>(a) the candidate or their election agent has previously undertaken a risk assessment in relation to a relevant donation from that person accepted by the candidate or their election agent in respect of the same election (the “previous risk-assessed donation”</td><td class="diff_next"></td><td class="diff_header" id="to7_3">3</td><td>(a) the candidate or their election agent has previously undertaken a risk assessment in relation to a relevant donation from that person accepted by the candidate or their election agent in respect of the same election (the “previous risk-assessed donation”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to7_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034850" target="_blank">70</a>:</p>
+
+    <table class="diff" id="difflib_chg_to8__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to8__0"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="from8_1">1</td><td>Schedule 8, page 159, line 25, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="to8_1">1</td><td>Schedule 8, page 159, line 25, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="from8_2">2</td><td><span class="diff_sub">“</span>(1CA) But regulations made by the Secretary of State under section 54C(3) apply in relation to donations to a candidate for a local government election in Scotland or Wales (or their election agent) only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers or the Welsh Ministers (as the case may be).”</td><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="to8_2">2</td><td>(1CA) But regulations made by the Secretary of State under section 54C(3) apply in relation to donations to a candidate for a local government election in Scotland or Wales (or their election agent) only if, before making the regulations, the Secretary of State obtained the consent of the Scottish Ministers or the Welsh Ministers (as the case may be).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034876" target="_blank">76</a>:</p>
+
+    <table class="diff" id="difflib_chg_to9__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to9__0"><a href="#difflib_chg_to9__0">f</a></td><td class="diff_header" id="from9_1">1</td><td>Schedule 8, page 161, line 27, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to9__0">f</a></td><td class="diff_header" id="to9_1">1</td><td>Schedule 8, page 161, line 27, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="from9_2">2</td><td><span class="diff_sub">“</span>(2A) For the purposes of sub-paragraph (1), a donation from a person in respect of a recall petition is also to be treated as a donation of an amount exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="to9_2">2</td><td>(2A) For the purposes of sub-paragraph (1), a donation from a person in respect of a recall petition is also to be treated as a donation of an amount exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_3">3</td><td>(a) the accredited campaigner has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in respect of the same recall petition (the “previous risk-assessed donation”</td><td class="diff_next"></td><td class="diff_header" id="to9_3">3</td><td>(a) the accredited campaigner has previously undertaken a risk assessment in relation to a relevant donation accepted from that person in respect of the same recall petition (the “previous risk-assessed donation”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to9_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034878" target="_blank">78</a>:</p>
+
+    <table class="diff" id="difflib_chg_to10__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to10__0"><a href="#difflib_chg_to10__0">f</a></td><td class="diff_header" id="from10_1">1</td><td>Schedule 8, page 164, line 21, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to10__0">f</a></td><td class="diff_header" id="to10_1">1</td><td>Schedule 8, page 164, line 21, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="from10_2">2</td><td><span class="diff_sub">“</span>(1BA) For the purposes of sub-paragraph (1A), a donation to a candidate or their election agent from a person in respect of an election is also to be treated as a donation of an amount exceeding £11,180 if—</td><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="to10_2">2</td><td>(1BA) For the purposes of sub-paragraph (1A), a donation to a candidate or their election agent from a person in respect of an election is also to be treated as a donation of an amount exceeding £11,180 if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_3">3</td><td>(a) the candidate or their election agent has previously undertaken a risk assessment in relation to a relevant donation from that person accepted by the candidate or their election agent in respect of the same election (the “previous risk-assessed donation”</td><td class="diff_next"></td><td class="diff_header" id="to10_3">3</td><td>(a) the candidate or their election agent has previously undertaken a risk assessment in relation to a relevant donation from that person accepted by the candidate or their election agent in respect of the same election (the “previous risk-assessed donation”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_4">4</td><td>), and</td><td class="diff_next"></td><td class="diff_header" id="to10_4">4</td><td>), and</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034837" target="_blank">81</a>:</p>
+
+    <table class="diff" id="difflib_chg_to11__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to11__0"><a href="#difflib_chg_to11__0">f</a></td><td class="diff_header" id="from11_1">1</td><td>Schedule 9, page 168, line 30, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to11__0">f</a></td><td class="diff_header" id="to11_1">1</td><td>Schedule 9, page 168, line 30, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="from11_2">2</td><td><span class="diff_sub">“</span>(6A) Where an unincorporated association would be required by sub-paragraph (2) to appoint an individual to be the responsible person in relation to the association but an appointment of such a person is already in force, the notice under sub-paragraph (3) must inform the Commission that the responsible person is willing to remain as the responsible person in relation to the association (and sub-paragraph (4)(a) is to be read accordingly).”</td><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="to11_2">2</td><td>(6A) Where an unincorporated association would be required by sub-paragraph (2) to appoint an individual to be the responsible person in relation to the association but an appointment of such a person is already in force, the notice under sub-paragraph (3) must inform the Commission that the responsible person is willing to remain as the responsible person in relation to the association (and sub-paragraph (4)(a) is to be read accordingly).”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034854" target="_blank">84</a>:</p>
+
+    <table class="diff" id="difflib_chg_to12__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to12__0"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="from12_1">1</td><td>Schedule 9, page 170, line 24, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="to12_1">1</td><td>Schedule 9, page 170, line 24, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="from12_2">2</td><td><span class="diff_sub">“</span>(4) Section 162 (meaning of exempt trust donation) applies for the purposes of this paragraph as if, in subsection (2)(a), for “27th July 1999”</td><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="to12_2">2</td><td>(4) Section 162 (meaning of exempt trust donation) applies for the purposes of this paragraph as if, in subsection (2)(a), for “27th July 1999”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from12_3">3</td><td>there were substituted “7th April 2026”</td><td class="diff_next"></td><td class="diff_header" id="to12_3">3</td><td>there were substituted “7th April 2026”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from12_4">4</td><td>.”</td><td class="diff_next"></td><td class="diff_header" id="to12_4">4</td><td>.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034856" target="_blank">85</a>:</p>
+
+    <table class="diff" id="difflib_chg_to13__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to13__0"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="from13_1">1</td><td>Schedule 9, page 173, line 11, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="to13_1">1</td><td>Schedule 9, page 173, line 11, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from13_2">2</td><td>“(c) after sub-paragraph (3) insert—</td><td class="diff_next"></td><td class="diff_header" id="to13_2">2</td><td>“(c) after sub-paragraph (3) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="from13_3">3</td><td><span class="diff_sub">“</span>(3A) A person commits an offence if—</td><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="to13_3">3</td><td>(3A) A person commits an offence if—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from13_4">4</td><td>(a) they knowingly give an unincorporated association any information relating to—</td><td class="diff_next"></td><td class="diff_header" id="to13_4">4</td><td>(a) they knowingly give an unincorporated association any information relating to—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from13_5">5</td><td>(i) the amount of any gift to the association, or</td><td class="diff_next"></td><td class="diff_header" id="to13_5">5</td><td>(i) the amount of any gift to the association, or</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034857" target="_blank">87</a>:</p>
+
+    <table class="diff" id="difflib_chg_to14__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to14__0"><a href="#difflib_chg_to14__0">f</a></td><td class="diff_header" id="from14_1">1</td><td>Schedule 9, page 174, line 9, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to14__0">f</a></td><td class="diff_header" id="to14_1">1</td><td>Schedule 9, page 174, line 9, at end insert—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_2">2</td><td>“Paragraph 6(3A)(a) of Schedule 19A (knowingly giving unincorporated association false information about gifts)</td><td class="diff_next"></td><td class="diff_header" id="to14_2">2</td><td>“Paragraph 6(3A)(a) of Schedule 19A (knowingly giving unincorporated association false information about gifts)</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to14__1">n</a></td><td class="diff_header" id="from14_3">3</td><td><span class="diff_sub">On summary conviction in England and Wales: fine or the general limit in a magistrates’ court</span></td><td class="diff_next"><a href="#difflib_chg_to14__1">n</a></td><td class="diff_header" id="to14_3">3</td><td><span class="diff_add">On summary conviction in England and Wales: fine or the general limit in a magistrates’ courtOn summary conviction in Scotland: statutory maximum or 12 monthsOn summary conviction in Northern Ireland: statutory maximum or 6 monthsOn indictment: fine or 1 year</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_4">4</td><td><span class="diff_sub">On summary conviction in Scotland: statutory maximum or 12 months</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_5">5</td><td><span class="diff_sub">On summary conviction in Northern Ireland: statutory maximum or 6 months</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next" id="difflib_chg_to14__1"></td><td class="diff_header" id="from14_6">6</td><td><span class="diff_sub">On indictment: fine or 1 year</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_7">7</td><td>Paragraph 6(3A)(b) of Schedule 19A (withholding from unincorporated association information about gifts with intent to deceive)</td><td class="diff_next"></td><td class="diff_header" id="to14_4">4</td><td>Paragraph 6(3A)(b) of Schedule 19A (withholding from unincorporated association information about gifts with intent to deceive)</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="from14_8">8</td><td><span class="diff_sub">On summary conviction in England and Wales: fine or the general limit in a magistrates’ court</span></td><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="to14_5">5</td><td><span class="diff_add">On summary conviction in England and Wales: fine or the general limit in a magistrates’ courtOn summary conviction in Scotland: statutory maximum or 12 monthsOn summary conviction in Northern Ireland: statutory maximum or 6 monthsOn indictment: fine or 1 year”</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_9">9</td><td><span class="diff_sub">On summary conviction in Scotland: statutory maximum or 12 months</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_10">10</td><td><span class="diff_sub">On summary conviction in Northern Ireland: statutory maximum or 6 months</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_11">11</td><td><span class="diff_sub">On indictment: fine or 1 year”</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034838" target="_blank">NC60</a>:</p>
+
+    <table class="diff" id="difflib_chg_to15__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to15__0"></td><td class="diff_header" id="from15_6">6</td><td>(a)”</td><td class="diff_next"></td><td class="diff_header" id="to15_6">6</td><td>(a)”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_7">7</td><td>; (b) at the end insert</td><td class="diff_next"></td><td class="diff_header" id="to15_7">7</td><td>; (b) at the end insert</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header"></td><td></td><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header" id="to15_8">8</td><td><span class="diff_add">“, or</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_8">8</td><td><span class="diff_sub">“, or</span>(b) any sum for the time being specified in Schedule 7 so far as that sum applies in relation to a donation to a member of a local authority in Scotland who is not also a member of a registered party.””</td><td class="diff_next"></td><td class="diff_header" id="to15_9">9</td><td>(b) any sum for the time being specified in Schedule 7 so far as that sum applies in relation to a donation to a member of a local authority in Scotland who is not also a member of a registered party.””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4080/stages/20536/amendments/10034788" target="_blank">NC57</a>:</p>
+
+    <table class="diff" id="difflib_chg_to16__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to16__0"></td><td class="diff_header" id="from16_7">7</td><td>(b) 4% of the total campaign expenditure incurred by the person or organisation during the relevant regulated period.”</td><td class="diff_next"></td><td class="diff_header" id="to16_7">7</td><td>(b) 4% of the total campaign expenditure incurred by the person or organisation during the relevant regulated period.”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_8">8</td><td>(3) At end of sub-paragraph (1) of paragraph 16 of Schedule 19C to PPERA 2000 insert—</td><td class="diff_next"></td><td class="diff_header" id="to16_8">8</td><td>(3) At end of sub-paragraph (1) of paragraph 16 of Schedule 19C to PPERA 2000 insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="from16_9">9</td><td><span class="diff_sub">“</span>(1A) Notwithstanding sub-paragraph (1), the Secretary of State may only make a supplementary order which amends the percentage of campaign expenditure incurred by the person or organisation during the relevant regulated period which can be used as a maximum monetary penalty by the Electoral Commission, if the condition in sub-paragraph (1B) has been met.</td><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="to16_9">9</td><td>(1A) Notwithstanding sub-paragraph (1), the Secretary of State may only make a supplementary order which amends the percentage of campaign expenditure incurred by the person or organisation during the relevant regulated period which can be used as a maximum monetary penalty by the Electoral Commission, if the condition in sub-paragraph (1B) has been met.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_10">10</td><td>(1B) The condition in this sub-paragraph is that a recommendation for the amendment has been made to the Secretary of State by the Electoral Commission following consultation with the Ethics and Integrity Commission.””</td><td class="diff_next"></td><td class="diff_header" id="to16_10">10</td><td>(1B) The condition in this sub-paragraph is that a recommendation for the amendment has been made to the Secretary of State by the Electoral Commission following consultation with the Ethics and Integrity Commission.””</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>
