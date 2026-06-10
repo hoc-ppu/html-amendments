@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Health Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Health Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Health Bill</td></tr><tr><td>Published date</td><td>Tuesday 09 June 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table><ul class="metadata-list"><li>LawMaker Project: Health Bill</li><li>LawMaker Stage: Committee Stage</li><li>Matched stage on parliament website (via bills API): <a href="https://bills.parliament.uk/bills/4124/stages/20769/amendments" target="_blank">Committee stage</a></li><li>Official List: Health Bill (hcmarsh) published on 2026-06-08 21:46</li><li>Report Generated: Tue 9 June 2026 14:43</li></ul></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-13"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments available via the API. This means that they  are also missing from the Bills website. </p><p>Missing content: <strong>7</strong><br>NC18 (hoc30), NC14 (hoc26), NC16 (hoc28), NC13 (hoc25), NC12 (hoc24), NC17 (hoc29), NC15 (hoc27)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>0</strong>  are only on the website.<small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">
+  <span>Amendments in the XML but not on the website: NC18, NC14, NC16, NC13, NC12, NC17, NC15<br>Amendments on the website but not in the XML: <br>Amendments which appear in both: NC1, NC5, NC10, 1, NC2, 3, 4, 2, NC9, 8, NC3, NC7, 7, 12, 5, NC4, 9, 11, NC11, 6, 10, NC8, NC6<small><br><br><strong>Note:</strong> The website is checked via the API.</small></span></p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-14"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <table class="sticky-head table-responsive-md table an-table"><thead><tr><th scope="col">Ref</th><th scope="col">Names missing from API</th><th scope="col">Names in API but not in XML</th><th scope="col">Totals</th></tr></thead><tbody><tr><td>9 (hoc21)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>10 (hoc22)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>11 (hoc10)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>8 (hoc8)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>12 (hoc11)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>1 (hoc1)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Sarah Dyke</span><span class="col-12 col-lg-6  mb-2">Steve Darling</span><span class="col-12 col-lg-6  mb-2">Mr Lee Dillon</span><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Munira Wilson</span><span class="col-12 col-lg-6  mb-2">Tom Gordon</span><span class="col-12 col-lg-6  mb-2">John Milne</span><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span><span class="col-12 col-lg-6  mb-2">Gideon Amos</span><span class="col-12 col-lg-6  mb-2">Mr Will Forster</span><span class="col-12 col-lg-6  mb-2">Ian Sollom</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Dr Roz Savage</span><span class="col-12 col-lg-6  mb-2">Brian Mathew</span><span class="col-12 col-lg-6  mb-2">Bobby Dean</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Ben Maguire</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Kim Johnson</span><span class="col-12 col-lg-6  mb-2">Manuela Perteghella</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span><span class="col-12 col-lg-6  mb-2">Caroline Voaden</span><span class="col-12 col-lg-6  mb-2">Lisa Smart</span><span class="col-12 col-lg-6  mb-2">Martin Wrigley</span><span class="col-12 col-lg-6  mb-2">Freddie van Mierlo</span></p></td><td><p class="row"></p></td><td>XML only: 25</td></tr><tr><td>3 (hoc3)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Sarah Dyke</span><span class="col-12 col-lg-6  mb-2">Steve Darling</span><span class="col-12 col-lg-6  mb-2">Mr Lee Dillon</span><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Munira Wilson</span><span class="col-12 col-lg-6  mb-2">Tom Gordon</span><span class="col-12 col-lg-6  mb-2">John Milne</span><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span><span class="col-12 col-lg-6  mb-2">Gideon Amos</span><span class="col-12 col-lg-6  mb-2">Mr Will Forster</span><span class="col-12 col-lg-6  mb-2">Ian Sollom</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Dr Roz Savage</span><span class="col-12 col-lg-6  mb-2">Brian Mathew</span><span class="col-12 col-lg-6  mb-2">Bobby Dean</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Ben Maguire</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Kim Johnson</span><span class="col-12 col-lg-6  mb-2">Manuela Perteghella</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span><span class="col-12 col-lg-6  mb-2">Caroline Voaden</span><span class="col-12 col-lg-6  mb-2">Lisa Smart</span><span class="col-12 col-lg-6  mb-2">Martin Wrigley</span><span class="col-12 col-lg-6  mb-2">Freddie van Mierlo</span></p></td><td><p class="row"></p></td><td>XML only: 25</td></tr><tr><td>NC1 (hoc9)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC2 (hoc16)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC3 (hoc17)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC4 (hoc18)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC5 (hoc19)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC6 (hoc20)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>NC7 (hoc12)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>NC8 (hoc13)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>NC9 (hoc14)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>NC10 (hoc15)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Adrian Ramsay</span><span class="col-12 col-lg-6  mb-2">Dr Ellie Chowns</span><span class="col-12 col-lg-6  mb-2">Siân Berry</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Wera Hobhouse</span><span class="col-12 col-lg-6  mb-2">David Chadwick</span><span class="col-12 col-lg-6  mb-2">Claire Hanna</span><span class="col-12 col-lg-6  mb-2">Zöe Franklin</span><span class="col-12 col-lg-6  mb-2">Cat Eccles</span></p></td><td><p class="row"></p></td><td>XML only: 10</td></tr><tr><td>6 (hoc6)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>5 (hoc5)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span></p></td><td><p class="row"></p></td><td>XML only: 3</td></tr><tr><td>2 (hoc2)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Sarah Dyke</span><span class="col-12 col-lg-6  mb-2">Steve Darling</span><span class="col-12 col-lg-6  mb-2">Mr Lee Dillon</span><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Munira Wilson</span><span class="col-12 col-lg-6  mb-2">Tom Gordon</span><span class="col-12 col-lg-6  mb-2">John Milne</span><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span><span class="col-12 col-lg-6  mb-2">Gideon Amos</span><span class="col-12 col-lg-6  mb-2">Mr Will Forster</span><span class="col-12 col-lg-6  mb-2">Ian Sollom</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Dr Roz Savage</span><span class="col-12 col-lg-6  mb-2">Brian Mathew</span><span class="col-12 col-lg-6  mb-2">Bobby Dean</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Ben Maguire</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Kim Johnson</span><span class="col-12 col-lg-6  mb-2">Manuela Perteghella</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span><span class="col-12 col-lg-6  mb-2">Caroline Voaden</span><span class="col-12 col-lg-6  mb-2">Lisa Smart</span><span class="col-12 col-lg-6  mb-2">Martin Wrigley</span><span class="col-12 col-lg-6  mb-2">Freddie van Mierlo</span></p></td><td><p class="row"></p></td><td>XML only: 25</td></tr><tr><td>4 (hoc4)</td><td><p class="row"><span class="col-12 col-lg-6  mb-2">Sarah Dyke</span><span class="col-12 col-lg-6  mb-2">Steve Darling</span><span class="col-12 col-lg-6  mb-2">Mr Lee Dillon</span><span class="col-12 col-lg-6  mb-2">Dr Danny Chambers</span><span class="col-12 col-lg-6  mb-2">Munira Wilson</span><span class="col-12 col-lg-6  mb-2">Tom Gordon</span><span class="col-12 col-lg-6  mb-2">John Milne</span><span class="col-12 col-lg-6  mb-2">Pippa Heylings</span><span class="col-12 col-lg-6  mb-2">Gideon Amos</span><span class="col-12 col-lg-6  mb-2">Mr Will Forster</span><span class="col-12 col-lg-6  mb-2">Ian Sollom</span><span class="col-12 col-lg-6  mb-2">Alison Bennett</span><span class="col-12 col-lg-6  mb-2">Dr Roz Savage</span><span class="col-12 col-lg-6  mb-2">Brian Mathew</span><span class="col-12 col-lg-6  mb-2">Bobby Dean</span><span class="col-12 col-lg-6  mb-2">Hannah Spencer</span><span class="col-12 col-lg-6  mb-2">Ben Maguire</span><span class="col-12 col-lg-6  mb-2">Christine Jardine</span><span class="col-12 col-lg-6  mb-2">Kim Johnson</span><span class="col-12 col-lg-6  mb-2">Manuela Perteghella</span><span class="col-12 col-lg-6  mb-2">Helen Maguire</span><span class="col-12 col-lg-6  mb-2">Caroline Voaden</span><span class="col-12 col-lg-6  mb-2">Lisa Smart</span><span class="col-12 col-lg-6  mb-2">Martin Wrigley</span><span class="col-12 col-lg-6  mb-2">Freddie van Mierlo</span></p></td><td><p class="row"></p></td><td>XML only: 25</td></tr></tbody></table><section class="collapsible closed"><div class="collapsible-header"><h3 class="h4"><span class="arrow"> </span>Name Changes in Context <small class="text-muted"> [show]</small></h3><p>Expand this section to see the same names as above but in context.</p></div><div class="collapsible-content" style="display: none;" id="name-changes-in-context"><p><strong>21</strong> amendments have different names in the API: </p>
+<div><p class="h5 mt-4">9:</p>
+
+    <table class="diff" id="difflib_chg_to5__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to5__0"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="from5_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to5__0">f</a></td><td class="diff_header" id="to5_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header" id="from5_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to5__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from5_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from5_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">10:</p>
+
+    <table class="diff" id="difflib_chg_to6__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to6__0"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="from6_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to6__0">f</a></td><td class="diff_header" id="to6_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header" id="from6_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to6__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from6_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from6_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">11:</p>
+
+    <table class="diff" id="difflib_chg_to7__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to7__0"></td><td class="diff_header" id="from7_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to7_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to7_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header" id="from7_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to7__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from7_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">8:</p>
+
+    <table class="diff" id="difflib_chg_to8__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to8__0"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="from8_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to8__0">f</a></td><td class="diff_header" id="to8_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header" id="from8_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to8__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from8_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from8_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">12:</p>
+
+    <table class="diff" id="difflib_chg_to9__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to9__0"></td><td class="diff_header" id="from9_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to9_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to9_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header" id="from9_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to9__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from9_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">1:</p>
+
+    <table class="diff" id="difflib_chg_to10__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to10__0"></td><td class="diff_header" id="from10_4">4</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to10_4">4</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_5">5</td><td>Siân Berry</td><td class="diff_next"></td><td class="diff_header" id="to10_5">5</td><td>Siân Berry</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header" id="from10_6">6</td><td><span class="diff_sub">Sarah Dyke</span></td><td class="diff_next"><a href="#difflib_chg_to10__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_7">7</td><td><span class="diff_sub">Steve Darling</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_8">8</td><td><span class="diff_sub">Mr Lee Dillon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_9">9</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_10">10</td><td><span class="diff_sub">Munira Wilson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_11">11</td><td><span class="diff_sub">Tom Gordon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_12">12</td><td><span class="diff_sub">John Milne</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_13">13</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_14">14</td><td><span class="diff_sub">Gideon Amos</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_15">15</td><td><span class="diff_sub">Mr Will Forster</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_16">16</td><td><span class="diff_sub">Ian Sollom</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_17">17</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_18">18</td><td><span class="diff_sub">Dr Roz Savage</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_19">19</td><td><span class="diff_sub">Brian Mathew</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_20">20</td><td><span class="diff_sub">Bobby Dean</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_21">21</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_22">22</td><td><span class="diff_sub">Ben Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_23">23</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_24">24</td><td><span class="diff_sub">Kim Johnson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_25">25</td><td><span class="diff_sub">Manuela Perteghella</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_26">26</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_27">27</td><td><span class="diff_sub">Caroline Voaden</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_28">28</td><td><span class="diff_sub">Lisa Smart</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_29">29</td><td><span class="diff_sub">Martin Wrigley</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from10_30">30</td><td><span class="diff_sub">Freddie van Mierlo</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">3:</p>
+
+    <table class="diff" id="difflib_chg_to11__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to11__0"></td><td class="diff_header" id="from11_4">4</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to11_4">4</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_5">5</td><td>Siân Berry</td><td class="diff_next"></td><td class="diff_header" id="to11_5">5</td><td>Siân Berry</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header" id="from11_6">6</td><td><span class="diff_sub">Sarah Dyke</span></td><td class="diff_next"><a href="#difflib_chg_to11__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_7">7</td><td><span class="diff_sub">Steve Darling</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_8">8</td><td><span class="diff_sub">Mr Lee Dillon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_9">9</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_10">10</td><td><span class="diff_sub">Munira Wilson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_11">11</td><td><span class="diff_sub">Tom Gordon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_12">12</td><td><span class="diff_sub">John Milne</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_13">13</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_14">14</td><td><span class="diff_sub">Gideon Amos</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_15">15</td><td><span class="diff_sub">Mr Will Forster</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_16">16</td><td><span class="diff_sub">Ian Sollom</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_17">17</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_18">18</td><td><span class="diff_sub">Dr Roz Savage</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_19">19</td><td><span class="diff_sub">Brian Mathew</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_20">20</td><td><span class="diff_sub">Bobby Dean</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_21">21</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_22">22</td><td><span class="diff_sub">Ben Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_23">23</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_24">24</td><td><span class="diff_sub">Kim Johnson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_25">25</td><td><span class="diff_sub">Manuela Perteghella</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_26">26</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_27">27</td><td><span class="diff_sub">Caroline Voaden</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_28">28</td><td><span class="diff_sub">Lisa Smart</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_29">29</td><td><span class="diff_sub">Martin Wrigley</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from11_30">30</td><td><span class="diff_sub">Freddie van Mierlo</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC1:</p>
+
+    <table class="diff" id="difflib_chg_to12__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to12__0"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="from12_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to12__0">f</a></td><td class="diff_header" id="to12_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header" id="from12_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to12__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from12_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from12_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC2:</p>
+
+    <table class="diff" id="difflib_chg_to13__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to13__0"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="from13_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to13__0">f</a></td><td class="diff_header" id="to13_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header" id="from13_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to13__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from13_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from13_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC3:</p>
+
+    <table class="diff" id="difflib_chg_to14__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to14__0"><a href="#difflib_chg_to14__0">f</a></td><td class="diff_header" id="from14_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to14__0">f</a></td><td class="diff_header" id="to14_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header" id="from14_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to14__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from14_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC4:</p>
+
+    <table class="diff" id="difflib_chg_to15__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to15__0"><a href="#difflib_chg_to15__0">f</a></td><td class="diff_header" id="from15_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to15__0">f</a></td><td class="diff_header" id="to15_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header" id="from15_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to15__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from15_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC5:</p>
+
+    <table class="diff" id="difflib_chg_to16__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to16__0"><a href="#difflib_chg_to16__0">f</a></td><td class="diff_header" id="from16_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to16__0">f</a></td><td class="diff_header" id="to16_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header" id="from16_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to16__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from16_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC6:</p>
+
+    <table class="diff" id="difflib_chg_to17__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to17__0"><a href="#difflib_chg_to17__0">f</a></td><td class="diff_header" id="from17_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to17__0">f</a></td><td class="diff_header" id="to17_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header" id="from17_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to17__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from17_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from17_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC7:</p>
+
+    <table class="diff" id="difflib_chg_to18__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to18__0"></td><td class="diff_header" id="from18_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to18_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to18_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header" id="from18_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to18__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from18_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC8:</p>
+
+    <table class="diff" id="difflib_chg_to19__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to19__0"></td><td class="diff_header" id="from19_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to19_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to19_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header" id="from19_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to19__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from19_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC9:</p>
+
+    <table class="diff" id="difflib_chg_to20__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to20__0"></td><td class="diff_header" id="from20_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to20_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to20_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header" id="from20_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to20__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from20_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">NC10:</p>
+
+    <table class="diff" id="difflib_chg_to21__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to21__0"></td><td class="diff_header" id="from21_3">3</td><td>Manuela Perteghella</td><td class="diff_next"></td><td class="diff_header" id="to21_3">3</td><td>Manuela Perteghella</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_4">4</td><td>Ben Maguire</td><td class="diff_next"></td><td class="diff_header" id="to21_4">4</td><td>Ben Maguire</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header" id="from21_5">5</td><td><span class="diff_sub">Adrian Ramsay</span></td><td class="diff_next"><a href="#difflib_chg_to21__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_6">6</td><td><span class="diff_sub">Dr Ellie Chowns</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_7">7</td><td><span class="diff_sub">Siân Berry</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_8">8</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_9">9</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_10">10</td><td><span class="diff_sub">Wera Hobhouse</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_11">11</td><td><span class="diff_sub">David Chadwick</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_12">12</td><td><span class="diff_sub">Claire Hanna</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_13">13</td><td><span class="diff_sub">Zöe Franklin</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from21_14">14</td><td><span class="diff_sub">Cat Eccles</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">6:</p>
+
+    <table class="diff" id="difflib_chg_to22__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to22__0"><a href="#difflib_chg_to22__0">f</a></td><td class="diff_header" id="from22_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to22__0">f</a></td><td class="diff_header" id="to22_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header" id="from22_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to22__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from22_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from22_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">5:</p>
+
+    <table class="diff" id="difflib_chg_to23__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to23__0"><a href="#difflib_chg_to23__0">f</a></td><td class="diff_header" id="from23_1">1</td><td>Helen Morgan</td><td class="diff_next"><a href="#difflib_chg_to23__0">f</a></td><td class="diff_header" id="to23_1">1</td><td>Helen Morgan</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header" id="from23_2">2</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"><a href="#difflib_chg_to23__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from23_3">3</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from23_4">4</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">2:</p>
+
+    <table class="diff" id="difflib_chg_to24__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to24__0"></td><td class="diff_header" id="from24_4">4</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to24_4">4</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_5">5</td><td>Siân Berry</td><td class="diff_next"></td><td class="diff_header" id="to24_5">5</td><td>Siân Berry</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header" id="from24_6">6</td><td><span class="diff_sub">Sarah Dyke</span></td><td class="diff_next"><a href="#difflib_chg_to24__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_7">7</td><td><span class="diff_sub">Steve Darling</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_8">8</td><td><span class="diff_sub">Mr Lee Dillon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_9">9</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_10">10</td><td><span class="diff_sub">Munira Wilson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_11">11</td><td><span class="diff_sub">Tom Gordon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_12">12</td><td><span class="diff_sub">John Milne</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_13">13</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_14">14</td><td><span class="diff_sub">Gideon Amos</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_15">15</td><td><span class="diff_sub">Mr Will Forster</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_16">16</td><td><span class="diff_sub">Ian Sollom</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_17">17</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_18">18</td><td><span class="diff_sub">Dr Roz Savage</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_19">19</td><td><span class="diff_sub">Brian Mathew</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_20">20</td><td><span class="diff_sub">Bobby Dean</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_21">21</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_22">22</td><td><span class="diff_sub">Ben Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_23">23</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_24">24</td><td><span class="diff_sub">Kim Johnson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_25">25</td><td><span class="diff_sub">Manuela Perteghella</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_26">26</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_27">27</td><td><span class="diff_sub">Caroline Voaden</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_28">28</td><td><span class="diff_sub">Lisa Smart</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_29">29</td><td><span class="diff_sub">Martin Wrigley</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from24_30">30</td><td><span class="diff_sub">Freddie van Mierlo</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div><div><p class="h5 mt-4">4:</p>
+
+    <table class="diff" id="difflib_chg_to25__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">Lawmaker XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Bills API</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to25__0"></td><td class="diff_header" id="from25_4">4</td><td>Dr Ellie Chowns</td><td class="diff_next"></td><td class="diff_header" id="to25_4">4</td><td>Dr Ellie Chowns</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_5">5</td><td>Siân Berry</td><td class="diff_next"></td><td class="diff_header" id="to25_5">5</td><td>Siân Berry</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header" id="from25_6">6</td><td><span class="diff_sub">Sarah Dyke</span></td><td class="diff_next"><a href="#difflib_chg_to25__top">t</a></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_7">7</td><td><span class="diff_sub">Steve Darling</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_8">8</td><td><span class="diff_sub">Mr Lee Dillon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_9">9</td><td><span class="diff_sub">Dr Danny Chambers</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_10">10</td><td><span class="diff_sub">Munira Wilson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_11">11</td><td><span class="diff_sub">Tom Gordon</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_12">12</td><td><span class="diff_sub">John Milne</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_13">13</td><td><span class="diff_sub">Pippa Heylings</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_14">14</td><td><span class="diff_sub">Gideon Amos</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_15">15</td><td><span class="diff_sub">Mr Will Forster</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_16">16</td><td><span class="diff_sub">Ian Sollom</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_17">17</td><td><span class="diff_sub">Alison Bennett</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_18">18</td><td><span class="diff_sub">Dr Roz Savage</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_19">19</td><td><span class="diff_sub">Brian Mathew</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_20">20</td><td><span class="diff_sub">Bobby Dean</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_21">21</td><td><span class="diff_sub">Hannah Spencer</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_22">22</td><td><span class="diff_sub">Ben Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_23">23</td><td><span class="diff_sub">Christine Jardine</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_24">24</td><td><span class="diff_sub">Kim Johnson</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_25">25</td><td><span class="diff_sub">Manuela Perteghella</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_26">26</td><td><span class="diff_sub">Helen Maguire</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_27">27</td><td><span class="diff_sub">Caroline Voaden</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_28">28</td><td><span class="diff_sub">Lisa Smart</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_29">29</td><td><span class="diff_sub">Martin Wrigley</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from25_30">30</td><td><span class="diff_sub">Freddie van Mierlo</span></td><td class="diff_next"></td><td class="diff_header"></td><td></td></tr>
+        </tbody>
+    </table>
+</div></div></section></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>2</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">NC11 (hoc23), 7 (hoc7)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-15"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All amendments have correct stars</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>23</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">9 (No Star), 10 (No Star), 11 (No Star), 8 (No Star), 12 (No Star), 1 (No Star), 3 (No Star), NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC5 (No Star), NC6 (No Star), NC7 (No Star), NC8 (No Star), NC9 (No Star), NC10 (No Star), NC11 (No Star), 6 (No Star), 7 (No Star), 5 (No Star), 2 (No Star), 4 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-16"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives and some whitespace differences are ignored.</p>
+<p>Amendments in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-17"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-18"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>
