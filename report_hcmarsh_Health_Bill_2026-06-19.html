@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Check Amendments</title>
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/design-system.css">
+  <link rel="stylesheet" href="https://designsystem.parliament.uk/apps/commons-business/v1.0/css/businesspapers.css">
+
+  <style type="text/css">
+    .container-fluid{
+      max-width: 1400px;
+    }
+    body {
+      font-family: National, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Open Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    a.hidden-until-hover{
+      text-decoration: none;
+    }
+    a.hidden-until-hover:hover {
+      text-decoration: underline;
+    }
+
+    .red {
+      color: var(--red) !important;
+    }
+
+    /* stuff in the design system that is not in the design system */
+    .table{
+      border:none;
+      /* overflow-wrap: break-word; */
+      /* display:block; */
+      margin-bottom:15px;
+      max-width:100%;
+      /* table-layout: fixed; */
+      /* overflow-x:auto */
+    }
+    .table td,
+    .table th{
+      border:1px solid #cbc9cd;
+      padding:10px
+    }
+    .table th{
+      background-color:#ebe9e8;
+      font-weight:500
+    }
+    .table:last-child{
+      margin-bottom:0
+    }
+    /* end fix for design system */
+
+    table.diff {
+      font-family: Courier, monospace;
+    }
+
+    #intro table td,
+    #intro table th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    table.diff td,
+    table.diff th {
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+
+    .dataframe tr td:first-child {
+      font-size: 1rem;
+    }
+
+    .diff_header {
+      background-color: #E7DFF4
+    }
+    .wrap{
+      overflow-wrap: break-word;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+    .wrap table{
+      margin-top: 1rem;
+    }
+    .wrap table th:first-child{
+      width: 100px;
+    }
+
+    td.diff_header {
+      text-align: right
+    }
+
+    .diff_next { background-color: #625A75; }
+    .diff_next * { color: white }
+    .diff_add { background-color: #96DCBE }
+    .diff_chg { background-color: #ffff77 }
+    .diff_sub { background-color: #F7CBCC }
+
+    .card { background-color: initial; }
+
+    .amendments-check h2 {
+      /* margin-top: 2rem; */
+    }
+
+    .dont-break-out {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .secondary-info h5, .secondary-info .h5 {
+      margin-top: 1rem;
+    }
+
+    /* -------------------- added names table -------------------- */
+    .an-table {
+      /* width: 100%; */
+      /* table-layout: fixed; */
+      /* border-collapse: collapse; */
+    }
+    .sticky-head th, .diff th{
+      /* background: white; */
+      position: sticky;
+      top: -1px; /* Don't forget this, required for the stickiness */
+      z-index: 1;
+    }
+
+    /* .an-table th,
+    .an-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    } */
+
+    /* .an-table th {
+      background-color: #f2f2f2;
+    } */
+
+    .an-table th:first-child {
+      width: 10%;
+    }
+
+    .an-table th:nth-child(2) {
+      width: 39%;
+    }
+    .an-table th:nth-child(3) {
+      width: 39%;
+    }
+
+    .an-table th:last-child {
+      width: 12%;
+    }
+
+    span.col-12.mb-2:last-child{
+      margin-bottom: 0 !important;
+    }
+    @media (min-width: 992px){
+      span.col-12.mb-2:nth-last-child(2){
+        margin-bottom: 0 !important;
+      }
+    }
+
+
+
+    /* --------------- Start collapsible sections ---------------- */
+    .collapsible {
+      margin-bottom: 10px;
+    }
+
+    .collapsible-header {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .collapsible-content {
+      display: block;
+      padding: 10px;
+    }
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 0.5rem solid transparent;
+      border-bottom: 0.5rem solid transparent;
+      border-left: 0.5rem solid #333;
+      margin-right: 1rem;
+      transition: transform 0.3s ease-in-out;
+      transform: rotate(90deg);
+    }
+
+    .collapsible.closed .arrow {
+      transform: rotate(0deg);
+    }
+
+    .collapsible-small{
+      padding: 0;
+      margin: 0;
+    }
+    /* ---------------- End collapsible sections ----------------- */
+    #toggle-refs {
+      margin-bottom:18px;
+    }
+
+    /* --------------------- tocbot styling ---------------------- */
+    .inner-content-scroll{
+      max-height: 100vh;
+      overflow: auto;
+    }
+    .js-toc .toc-list-item{
+      padding-top: 0.25rem;
+    }
+    .is-collapsible {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: all 300ms ease-in-out;
+    }
+    .is-collapsed {
+      max-height: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <main id="main-content">
+    <article>
+      <div class="container-fluid">
+        <div class="row block">
+          <div class="col-md-3 block-page order-md-last">
+            <div class="sticky-top inner-content-scroll">
+              <h3 id="toc-heading" class="heading-level-3" data-toc-skip>Contents</h3>
+              <nav class="js-toc toc" id="toc" data-toggle="toc" aria-labelledby="toc-heading"></nav>
+            </div>
+          </div>
+          <div class="col-md-9 js-toc-content">
+            <div class="block-page amendments-check" id="content-goes-here">
+              <h1>Check Amendments on Bills.parliament.uk</h1>
+
+            <div class="wrap"><section id="intro"><h2>Introduction</h2><p>This report summarises differences between amendments in the <a href="https://bills-api.parliament.uk/index.html">bills API</a> and the amendments in the LawMaker document XML official list documents. The document is:<br><strong>Health Bill</strong></p></section><table class="sticky-head table-responsive-md table"><thead><tr><th scope="col"></th><th scope="col">Health Bill</th></tr></thead><tbody><tr><td>Bill Title</td><td>Health Bill</td></tr><tr><td>Published date</td><td>Monday 22 June 2026</td></tr><tr><td>List Type</td><td>Amendment Paper</td></tr></tbody></table></div><div></div><div></div><section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Missing amendments" id="card-1"><span class="arrow"> </span>Missing amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>Listed below are any Amendments (&amp; New Clauses etc.) which are present in the XML from LawMaker but not present in Amendments available via the API. This means that they  are also missing from the Bills website. </p><p>Missing amendments: <strong>None</strong></p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>1</strong>  are only on the website.<small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">
+  <span>Amendments in the XML but not on the website: <br>Amendments on the website but not in the XML: NC61<br>Amendments which appear in both: 50, NC42, 53, 33, NC1, NC52, 20, NC21, NC35, NC49, 32, NC14, 40, 19, NC51, 58, NC16, NC2, NC15, 12, 14, 43, 21, NC45, NC30, NC23, 37, 47, NC53, NC54, 5, 42, NC58, 59, 62, NC47, NC31, 55, NC33, NC59, 9, NC4, NC5, 44, NC29, NC13, 23, NC20, 56, NS1, 10, NC41, 30, NC40, NC43, NC22, NC12, 15, 51, NC56, 49, NC10, NC25, NC32, NC28, NC11, NC17, NC57, NC55, 27, 57, 3, NC46, 8, 7, 22, 61, NC3, NC39, 60, 35, NC36, 41, NC18, 52, 24, 11, 31, NC38, NC60, 46, 4, 2, NC37, 38, 28, NC48, NC26, 48, NC19, 39, 16, 17, 34, 13, NC24, 54, NC50, 6, 45, 26, NC6, NC7, 25, NC9, 1, NC44, NC8, NC34, 29, NC27, 18, 36<small><br><br><strong>Note:</strong> The website is checked via the API.</small></span></p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Check Names" id="card-2"><span class="arrow"> </span>Check Names<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Zero</strong> amendments have name changes.</p><div></div></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>123</strong> amendments have correct names: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">13 (hoc31), 29 (hoc42), 34 (hoc51), 30 (hoc43), 59 (hoc94), 58 (hoc92), 33 (hoc46), 50 (hoc72), 54 (hoc80), 53 (hoc77), 47 (hoc69), 57 (hoc90), 14 (opc6), 15 (opc7), 16 (opc12), 17 (opc10), 18 (opc13), 28 (hoc40), 35 (hoc54), 51 (hoc75), 52 (hoc76), 32 (hoc48), 46 (hoc68), 25 (hoc35), 45 (hoc67), 26 (hoc36), 27 (hoc37), 31 (hoc44), 19 (opc4), 36 (hoc58), 60 (hoc100), 9 (hoc21), 10 (hoc22), 61 (hoc101), 11 (hoc10), 8 (hoc8), 12 (hoc11), 62 (hoc108), 48 (hoc70), 49 (hoc71), 6 (hoc6), 7 (hoc7), 40 (hoc62), 55 (hoc83), 56 (hoc84), 5 (hoc5), 41 (hoc63), 42 (hoc64), 43 (hoc65), 44 (hoc66), 1 (hoc1), 2 (hoc2), 3 (hoc3), 4 (hoc4), 20 (opc14), 21 (opc15), 22 (opc16), 23 (opc2), 24 (opc18), NC20 (opc3), NC21 (opc5), NC22 (opc11), NC23 (opc8), NC1 (hoc9), NC2 (hoc16), NC3 (hoc17), NC4 (hoc18), NC5 (hoc19), NC6 (hoc20), NC7 (hoc12), NC8 (hoc13), NC9 (hoc14), NC10 (hoc15), NC11 (hoc23), NC12 (hoc24), NC13 (hoc25), NC14 (hoc26), NC15 (hoc27), NC16 (hoc28), NC17 (hoc29), NC18 (hoc30), NC19 (hoc32), NC24 (hoc33), NC25 (hoc34), NC26 (hoc38), NC27 (hoc39), NC28 (hoc41), NC29 (hoc45), NC30 (hoc47), NC31 (hoc49), NC32 (hoc50), NC33 (hoc52), NC34 (hoc53), NC35 (hoc55), NC36 (hoc56), NC37 (hoc57), NC38 (hoc73), NC39 (hoc74), NC40 (hoc78), NC41 (hoc79), NC42 (hoc82), NC43 (hoc85), NC44 (hoc86), NC45 (hoc81), NC46 (hoc87), NC47 (hoc88), NC48 (hoc89), NC49 (hoc91), NC50 (hoc93), NC51 (hoc95), NC52 (hoc97), NC53 (hoc98), NC54 (hoc99), NC55 (hoc103), NC56 (hoc104), NC57 (hoc105), NC58 (hoc106), NC59 (hoc107), NC60 (hoc109), NS1 (opc9), 37 (hoc59), 38 (hoc60), 39 (hoc61)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Star Check" id="card-3"><span class="arrow"> </span>Star Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong class="red">9 amendments have incorrect stars:</strong>  60 has ☆ (No Star expected), 61 has ☆ (No Star expected), 62 has ☆ (No Star expected), NC55 has ☆ (No Star expected), NC56 has ☆ (No Star expected), NC57 has ☆ (No Star expected), NC58 has ☆ (No Star expected), NC59 has ☆ (No Star expected), NC60 has ☆ (No Star expected)</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      <div class="collapsible collapsible-small closed">
+  <div class="collapsible-header collapsible-small">
+    <p><span class="arrow"> </span><span><strong>114</strong> amendments have correct stars: <small class="text-muted"> [show]</small></span></p>
+  </div>
+  <p class="collapsible-content" style="display: none;">13 (No Star), 29 (No Star), 34 (No Star), 30 (No Star), 59 (No Star), 58 (No Star), 33 (No Star), 50 (No Star), 54 (No Star), 53 (No Star), 47 (No Star), 57 (No Star), 14 (No Star), 15 (No Star), 16 (No Star), 17 (No Star), 18 (No Star), 28 (No Star), 35 (No Star), 51 (No Star), 52 (No Star), 32 (No Star), 46 (No Star), 25 (No Star), 45 (No Star), 26 (No Star), 27 (No Star), 31 (No Star), 19 (No Star), 36 (No Star), 9 (No Star), 10 (No Star), 11 (No Star), 8 (No Star), 12 (No Star), 48 (No Star), 49 (No Star), 6 (No Star), 7 (No Star), 40 (No Star), 55 (No Star), 56 (No Star), 5 (No Star), 41 (No Star), 42 (No Star), 43 (No Star), 44 (No Star), 1 (No Star), 2 (No Star), 3 (No Star), 4 (No Star), 20 (No Star), 21 (No Star), 22 (No Star), 23 (No Star), 24 (No Star), NC20 (No Star), NC21 (No Star), NC22 (No Star), NC23 (No Star), NC1 (No Star), NC2 (No Star), NC3 (No Star), NC4 (No Star), NC5 (No Star), NC6 (No Star), NC7 (No Star), NC8 (No Star), NC9 (No Star), NC10 (No Star), NC11 (No Star), NC12 (No Star), NC13 (No Star), NC14 (No Star), NC15 (No Star), NC16 (No Star), NC17 (No Star), NC18 (No Star), NC19 (No Star), NC24 (No Star), NC25 (No Star), NC26 (No Star), NC27 (No Star), NC28 (No Star), NC29 (No Star), NC30 (No Star), NC31 (No Star), NC32 (No Star), NC33 (No Star), NC34 (No Star), NC35 (No Star), NC36 (No Star), NC37 (No Star), NC38 (No Star), NC39 (No Star), NC40 (No Star), NC41 (No Star), NC42 (No Star), NC43 (No Star), NC44 (No Star), NC45 (No Star), NC46 (No Star), NC47 (No Star), NC48 (No Star), NC49 (No Star), NC50 (No Star), NC51 (No Star), NC52 (No Star), NC53 (No Star), NC54 (No Star), NS1 (No Star), 37 (No Star), 38 (No Star), 39 (No Star)</p>
+</div></div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Incorrect amendments" id="card-4"><span class="arrow"> </span>Incorrect amendments<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p><strong>Note:</strong> There can be false positives and some whitespace differences are ignored.</p>
+<p><strong class="red">3</strong> amendments have incorrect content in the API: </p>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4124/stages/20769/amendments/10036001" target="_blank">18</a>:</p>
+
+    <table class="diff" id="difflib_chg_to0__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to0__0"><a href="#difflib_chg_to0__0">f</a></td><td class="diff_header" id="from0_1">1</td><td>Schedule 1, page 75, line 1, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to0__0">f</a></td><td class="diff_header" id="to0_1">1</td><td>Schedule 1, page 75, line 1, at end insert—</td></tr>
+            <tr><td class="diff_next" id="difflib_chg_to0__1"><a href="#difflib_chg_to0__1">n</a></td><td class="diff_header" id="from0_2">2</td><td><span class="diff_sub">“</span>(4) In subsection (5), in the definition of “relevant area”</td><td class="diff_next"><a href="#difflib_chg_to0__1">n</a></td><td class="diff_header" id="to0_2">2</td><td>(4) In subsection (5), in the definition of “relevant area”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from0_3">3</td><td>, after paragraph (b) insert—</td><td class="diff_next"></td><td class="diff_header" id="to0_3">3</td><td>, after paragraph (b) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="from0_4">4</td><td><span class="diff_sub">“</span>(ba) in relation to an integrated care board, in a case where a person has at any time provided or performed services by arrangement or contract with the board, means the prescribed area (at the prescribed time).””</td><td class="diff_next"><a href="#difflib_chg_to0__top">t</a></td><td class="diff_header" id="to0_4">4</td><td>(ba) in relation to an integrated care board, in a case where a person has at any time provided or performed services by arrangement or contract with the board, means the prescribed area (at the prescribed time).””</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4124/stages/20769/amendments/10036008" target="_blank">19</a>:</p>
+
+    <table class="diff" id="difflib_chg_to1__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to1__0"><a href="#difflib_chg_to1__0">f</a></td><td class="diff_header" id="from1_1">1</td><td>Schedule 3, page 81, line 10, at end insert—</td><td class="diff_next"><a href="#difflib_chg_to1__0">f</a></td><td class="diff_header" id="to1_1">1</td><td>Schedule 3, page 81, line 10, at end insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="from1_2">2</td><td><span class="diff_sub">“</span>(1A) Unless or except to the extent that regulations provide otherwise, the executive directors must include—</td><td class="diff_next"><a href="#difflib_chg_to1__top">t</a></td><td class="diff_header" id="to1_2">2</td><td>(1A) Unless or except to the extent that regulations provide otherwise, the executive directors must include—</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_3">3</td><td>(a) at least one person who is a registered medical practitioner or a registered dentist (within the meaning of the Dentists Act 1984), and</td><td class="diff_next"></td><td class="diff_header" id="to1_3">3</td><td>(a) at least one person who is a registered medical practitioner or a registered dentist (within the meaning of the Dentists Act 1984), and</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from1_4">4</td><td>(b) at least one other person who is a registered nurse or a registered midwife.”</td><td class="diff_next"></td><td class="diff_header" id="to1_4">4</td><td>(b) at least one other person who is a registered nurse or a registered midwife.”</td></tr>
+        </tbody>
+    </table>
+<p class="h5"><a href="https://bills.parliament.uk/bills/4124/stages/20769/amendments/10036013" target="_blank">NS1</a>:</p>
+
+    <table class="diff" id="difflib_chg_to2__top" cellspacing="0" cellpadding="0" rules="groups">
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <thead><tr><th class="diff_next"><br></th><th colspan="2" class="diff_header">XML</th><th class="diff_next"><br></th><th colspan="2" class="diff_header">Api Amendments</th></tr></thead>
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__0"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="from2_1">1</td><td>To move the following Schedule—</td><td class="diff_next"><a href="#difflib_chg_to2__0">f</a></td><td class="diff_header" id="to2_1">1</td><td>To move the following Schedule—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__1">n</a></td><td class="diff_header" id="from2_2">2</td><td><span class="diff_sub">“Schedule Pharmaceutical services: appeals etc</span></td><td class="diff_next"><a href="#difflib_chg_to2__1">n</a></td><td class="diff_header" id="to2_2">2</td><td><span class="diff_add">“Schedule</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header"></td><td></td><td class="diff_next"></td><td class="diff_header" id="to2_3">3</td><td><span class="diff_add">PHARMACEUTICAL SERVICES: APPEALS ETC</span></td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_3">3</td><td>1 The National Health Service Act 2006 is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_4">4</td><td>1 The National Health Service Act 2006 is amended as follows.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_4">4</td><td>2 (1) Section 130 (regulations as to pharmaceutical services: appeals, etc) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_5">5</td><td>2 (1) Section 130 (regulations as to pharmaceutical services: appeals, etc) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__1"></td><td class="diff_header" id="from2_7">7</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_8">8</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_8">8</td><td>(3) After subsection (2) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_9">9</td><td>(3) After subsection (2) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__2">n</a></td><td class="diff_header" id="from2_9">9</td><td><span class="diff_sub">“</span>(2A) In subsection (2) “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__2">n</a></td><td class="diff_header" id="to2_10">10</td><td>(2A) In subsection (2) “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_10">10</td><td>has the meaning given by section 158(9).”</td><td class="diff_next"></td><td class="diff_header" id="to2_11">11</td><td>has the meaning given by section 158(9).”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_11">11</td><td>3 (1) Section 132 (persons authorised to provide pharmaceutical services) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_12">12</td><td>3 (1) Section 132 (persons authorised to provide pharmaceutical services) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__2"></td><td class="diff_header" id="from2_14">14</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_15">15</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_15">15</td><td>(3) After subsection (5) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_16">16</td><td>(3) After subsection (5) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__3">n</a></td><td class="diff_header" id="from2_16">16</td><td><span class="diff_sub">“</span>(5A) In subsection (5) “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__3">n</a></td><td class="diff_header" id="to2_17">17</td><td>(5A) In subsection (5) “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_17">17</td><td>has the meaning given by section 158(9).”</td><td class="diff_next"></td><td class="diff_header" id="to2_18">18</td><td>has the meaning given by section 158(9).”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_18">18</td><td>4 (1) Section 154 (suspension) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_19">19</td><td>4 (1) Section 154 (suspension) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__3"></td><td class="diff_header" id="from2_21">21</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_22">22</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_22">22</td><td>(3) After subsection (8) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_23">23</td><td>(3) After subsection (8) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__4">n</a></td><td class="diff_header" id="from2_23">23</td><td><span class="diff_sub">“</span>(8A) In subsections (6) to (8) “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__4">n</a></td><td class="diff_header" id="to2_24">24</td><td>(8A) In subsections (6) to (8) “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_24">24</td><td>has the meaning given by section 158(9).”</td><td class="diff_next"></td><td class="diff_header" id="to2_25">25</td><td>has the meaning given by section 158(9).”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_25">25</td><td>5 (1) Section 155 (suspension pending appeal) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_26">26</td><td>5 (1) Section 155 (suspension pending appeal) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__4"></td><td class="diff_header" id="from2_28">28</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_29">29</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_29">29</td><td>(3) After subsection (7) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_30">30</td><td>(3) After subsection (7) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__5">n</a></td><td class="diff_header" id="from2_30">30</td><td><span class="diff_sub">“</span>(8) In this section “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__5">n</a></td><td class="diff_header" id="to2_31">31</td><td>(8) In this section “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_31">31</td><td>has the meaning given by section 158(9).”</td><td class="diff_next"></td><td class="diff_header" id="to2_32">32</td><td>has the meaning given by section 158(9).”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_32">32</td><td>6 (1) Section 157 (review of decisions) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_33">33</td><td>6 (1) Section 157 (review of decisions) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__5"></td><td class="diff_header" id="from2_35">35</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_36">36</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_36">36</td><td>(3) After subsection (3) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_37">37</td><td>(3) After subsection (3) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__6">n</a></td><td class="diff_header" id="from2_37">37</td><td><span class="diff_sub">“</span>(4) In this section “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__6">n</a></td><td class="diff_header" id="to2_38">38</td><td>(4) In this section “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_38">38</td><td>has the meaning given by section 158(9).”</td><td class="diff_next"></td><td class="diff_header" id="to2_39">39</td><td>has the meaning given by section 158(9).”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_39">39</td><td>7 (1) Section 158 (appeals) is amended as follows.</td><td class="diff_next"></td><td class="diff_header" id="to2_40">40</td><td>7 (1) Section 158 (appeals) is amended as follows.</td></tr>
+        </tbody>        
+        <tbody>
+            <tr><td class="diff_next" id="difflib_chg_to2__6"></td><td class="diff_header" id="from2_42">42</td><td>.</td><td class="diff_next"></td><td class="diff_header" id="to2_43">43</td><td>.</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_43">43</td><td>(3) After subsection (8) insert—</td><td class="diff_next"></td><td class="diff_header" id="to2_44">44</td><td>(3) After subsection (8) insert—</td></tr>
+            <tr><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="from2_44">44</td><td><span class="diff_sub">“</span>(9) In this section “relevant appeal body”</td><td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td><td class="diff_header" id="to2_45">45</td><td>(9) In this section “relevant appeal body”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_45">45</td><td>means an NHS body specified by regulations made by the Secretary of State.”</td><td class="diff_next"></td><td class="diff_header" id="to2_46">46</td><td>means an NHS body specified by regulations made by the Secretary of State.”</td></tr>
+            <tr><td class="diff_next"></td><td class="diff_header" id="from2_46">46</td><td>8 For section 159 substitute—</td><td class="diff_next"></td><td class="diff_header" id="to2_47">47</td><td>8 For section 159 substitute—</td></tr>
+        </tbody>
+    </table>
+</div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Decision Check" id="card-5"><span class="arrow"> </span>Decision Check<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>The XML file does not appear to be a proceedings paper so no decisions have been checked.</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="card">
+<div class="card-inner collapsible">
+  <div class="collapsible-header">
+    <h2 data-heading-label="Explanatory Statements" id="card-6"><span class="arrow"> </span>Explanatory Statements<small class="text-muted"> [hide]</small></h2>
+  </div>
+  <div class="collapsible-content">
+    <div class="content">
+      <div class="secondary-info">
+      <!-- This is where secondary info goes -->
+      <p>All explanatory statements in the API match those in the XML 😀</p></div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <!-- Tertiary info -->
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.27.4/tocbot.min.js"></script>
+  <script>
+
+    // tocbot settings
+    const tocbot_settings = {
+      // Where to render the table of contents.
+      tocSelector: '.js-toc',
+      // Where to grab the headings to build the table of contents.
+      contentSelector: '.js-toc-content',
+      // Which headings to grab inside of the contentSelector element.
+      headingSelector: 'h2, h3',
+      // For headings inside relative or absolute positioned containers within content.
+      hasInnerContainers: true,
+      // ignore headings that are hidden in DOM
+      ignoreHiddenElements: true,
+      collapseDepth: 0,
+    };
+
+    if (window.innerWidth < 768){
+      tocbot_settings.headingSelector = 'h2';
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const collapsibleHeaders = document.querySelectorAll(".collapsible-header");
+
+      collapsibleHeaders.forEach(function(header) {
+        header.addEventListener("click", function() {
+          const parent = this.parentElement;
+          parent.classList.toggle("closed");
+
+          const showHide = this.querySelector("small");
+          // console.log(showHide);
+          if (showHide !== null) {
+            showHide.textContent = parent.classList.contains("closed") ? " [show]" : " [hide]";
+          }
+
+          const content = this.nextElementSibling;
+          content.style.display = parent.classList.contains("closed") ? "none" : "block";
+
+          tocbot.refresh(tocbot_settings);
+
+        });
+      });
+
+      const refs = document.querySelectorAll(".show-or-hide-refs");
+
+      const h3s = document.querySelectorAll("h3");
+
+      const toggleRefsBtn = document.getElementById("toggle-refs");
+
+      toggleRefsBtn.addEventListener("click", function() {
+
+        toggleRefsBtn.textContent = toggleRefsBtn.textContent === "Hide x ref only changes" ? "Show x ref only changes" : "Hide x ref only changes";
+
+
+        refs.forEach(function(ref) {
+          ref.toggleAttribute("hidden");
+        });
+
+        h3s.forEach(function(h3) {
+          h3.classList.remove("js-toc-ignore");
+          element = h3;
+          while (element.parentElement) {
+            element = element.parentElement;
+            if (element.hasAttribute("hidden")) {
+              h3.classList.add("js-toc-ignore");
+              break;
+            }
+          }
+        });
+
+        tocbot.refresh(tocbot_settings);
+
+      });
+    });
+
+    tocbot.init(tocbot_settings);
+
+    window.addEventListener('resize', function() {
+      // Your code to execute on window resize
+      if (window.innerWidth < 768){
+        tocbot_settings.headingSelector = 'h2';
+      } else {
+        tocbot_settings.headingSelector = 'h2, h3';
+      }
+      tocbot.refresh(tocbot_settings);
+    });
+  </script>
+</body>
+
+</html>
